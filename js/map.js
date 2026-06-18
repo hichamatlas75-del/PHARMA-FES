@@ -1,0 +1,317 @@
+/* ============================================================
+   PHARMA FÈS — Leaflet Map Management
+   ============================================================ */
+
+const PharmacyMap = {
+  map: null,
+  markers: [],
+  markerLookup: {},     // id → { marker, pharmacy }
+  userMarker: null,
+  userLat: null,
+  userLng: null,
+  selectedMarker: null,
+  selectedId: null,
+
+  /* ---------- Initialization ---------- */
+
+  /**
+   * Initialize the Leaflet map centered on Fès
+   */
+  init() {
+    this.map = L.map('map', {
+      center: [34.0331, -4.9998],
+      zoom: 13,
+      zoomControl: false,
+      attributionControl: true
+    });
+
+    /* Zoom control — bottom-left to avoid FAB overlap */
+    L.control.zoom({ position: 'bottomleft' }).addTo(this.map);
+
+    /* Tile layer — OpenStreetMap */
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19
+    }).addTo(this.map);
+  },
+
+  /* ---------- Markers ---------- */
+
+  /**
+   * Add pharmacy markers to the map
+   * @param {Array} pharmacies - Array of pharmacy objects
+   */
+  addMarkers(pharmacies) {
+    this.clearMarkers();
+
+    pharmacies.forEach(pharmacy => {
+      const status = Utils.getStatus(pharmacy);
+      const icon = this.createMarkerIcon(status);
+
+      const marker = L.marker([pharmacy.lat, pharmacy.lng], { icon })
+        .addTo(this.map);
+
+      /* Bind popup */
+      marker.bindPopup(this.createPopupContent(pharmacy), {
+        maxWidth: 280,
+        minWidth: 220,
+        closeButton: true,
+        className: 'pharmacy-popup'
+      });
+
+      /* Click handler */
+      marker.on('click', () => {
+        this.selectPharmacy(pharmacy);
+      });
+
+      const entry = { marker, pharmacy, visible: true };
+      this.markers.push(entry);
+      this.markerLookup[pharmacy.id] = entry;
+    });
+  },
+
+  /**
+   * Clear all markers from map
+   */
+  clearMarkers() {
+    this.markers.forEach(({ marker }) => marker.remove());
+    this.markers = [];
+    this.markerLookup = {};
+    this.selectedMarker = null;
+    this.selectedId = null;
+  },
+
+  /**
+   * Create custom marker DivIcon based on status
+   * @param {string} status - Pharmacy status
+   * @returns {L.DivIcon}
+   */
+  createMarkerIcon(status) {
+    const colors = {
+      'open':       { bg: '#16a34a', border: '#15803d' },
+      'garde-jour': { bg: '#3b82f6', border: '#2563eb' },
+      'garde-nuit': { bg: '#3b82f6', border: '#2563eb' },
+      'closed':     { bg: '#94a3b8', border: '#64748b' }
+    };
+    const c = colors[status] || colors['closed'];
+
+    return L.divIcon({
+      className: 'custom-marker',
+      html: `<div style="
+        background:${c.bg};
+        border:2px solid ${c.border};
+        width:32px;height:32px;
+        border-radius:50%;
+        display:flex;align-items:center;justify-content:center;
+        box-shadow:0 2px 8px rgba(0,0,0,0.2);
+        transition:transform 0.3s ease;
+      "><span style="color:white;font-size:16px;" class="material-icons-round">local_pharmacy</span></div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+      popupAnchor: [0, -20]
+    });
+  },
+
+  /* ---------- User Position ---------- */
+
+  /**
+   * Show user position with pulsing blue dot
+   * @param {number} lat - User latitude
+   * @param {number} lng - User longitude
+   */
+  showUserPosition(lat, lng) {
+    this.userLat = lat;
+    this.userLng = lng;
+
+    if (this.userMarker) {
+      this.userMarker.setLatLng([lat, lng]);
+    } else {
+      const userIcon = L.divIcon({
+        className: 'custom-marker',
+        html: '<div class="user-marker"></div>',
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
+      });
+      this.userMarker = L.marker([lat, lng], {
+        icon: userIcon,
+        zIndexOffset: 1000,
+        interactive: false
+      }).addTo(this.map);
+    }
+  },
+
+  /**
+   * Update user position by requesting geolocation
+   */
+  async updateUserPosition() {
+    try {
+      const pos = await Utils.getUserLocation();
+      this.showUserPosition(pos.lat, pos.lng);
+      return pos;
+    } catch (err) {
+      throw err;
+    }
+  },
+
+  /* ---------- Navigation ---------- */
+
+  /**
+   * Center map on coordinates
+   * @param {number} lat - Latitude
+   * @param {number} lng - Longitude
+   * @param {number} zoom - Zoom level (default 16)
+   */
+  centerOn(lat, lng, zoom = 16) {
+    this.map.flyTo([lat, lng], zoom, {
+      duration: 0.8,
+      easeLinearity: 0.25
+    });
+  },
+
+  /**
+   * Center on user position
+   */
+  centerOnUser() {
+    if (this.userLat !== null && this.userLng !== null) {
+      this.centerOn(this.userLat, this.userLng, 15);
+    }
+  },
+
+  /* ---------- Selection ---------- */
+
+  /**
+   * Highlight / select a pharmacy on the map
+   * @param {Object} pharmacy - Pharmacy object
+   */
+  selectPharmacy(pharmacy) {
+    this.clearSelection();
+
+    const entry = this.markerLookup[pharmacy.id];
+    if (!entry) return;
+
+    this.selectedId = pharmacy.id;
+    this.selectedMarker = entry.marker;
+
+    /* Bounce animation */
+    const el = entry.marker.getElement();
+    if (el) {
+      el.classList.add('marker-bounce');
+      setTimeout(() => el.classList.remove('marker-bounce'), 600);
+    }
+
+    /* Open popup */
+    entry.marker.openPopup();
+
+    /* Center map */
+    this.centerOn(pharmacy.lat, pharmacy.lng, 16);
+  },
+
+  /**
+   * Clear current selection
+   */
+  clearSelection() {
+    if (this.selectedMarker) {
+      this.selectedMarker.closePopup();
+    }
+    this.selectedMarker = null;
+    this.selectedId = null;
+  },
+
+  /* ---------- Filtering ---------- */
+
+  /**
+   * Filter visible markers by predicate
+   * @param {Function} filterFn - Returns true for markers to show
+   */
+  filterMarkers(filterFn) {
+    this.markers.forEach(entry => {
+      if (filterFn(entry.pharmacy)) {
+        if (!entry.visible) {
+          entry.marker.addTo(this.map);
+          entry.visible = true;
+        }
+      } else {
+        if (entry.visible) {
+          entry.marker.remove();
+          entry.visible = false;
+        }
+      }
+    });
+  },
+
+  /**
+   * Show all markers
+   */
+  showAllMarkers() {
+    this.markers.forEach(entry => {
+      if (!entry.visible) {
+        entry.marker.addTo(this.map);
+        entry.visible = true;
+      }
+    });
+  },
+
+  /**
+   * Update marker icons (e.g., after status change)
+   */
+  refreshMarkerIcons() {
+    this.markers.forEach(entry => {
+      const status = Utils.getStatus(entry.pharmacy);
+      const icon = this.createMarkerIcon(status);
+      entry.marker.setIcon(icon);
+      /* Update popup content */
+      entry.marker.setPopupContent(this.createPopupContent(entry.pharmacy));
+    });
+  },
+
+  /* ---------- Popup ---------- */
+
+  /**
+   * Create popup HTML content for a pharmacy
+   * @param {Object} pharmacy - Pharmacy object
+   * @returns {string} HTML string
+   */
+  createPopupContent(pharmacy) {
+    const status = Utils.getStatus(pharmacy);
+    const statusLabel = Utils.getStatusLabel(status);
+    const statusClass = Utils.getStatusClass(status);
+
+    let distanceHtml = '';
+    if (this.userLat !== null) {
+      const dist = Utils.haversineDistance(this.userLat, this.userLng, pharmacy.lat, pharmacy.lng);
+      distanceHtml = `<span class="popup-distance">📍 ${Utils.formatDistance(dist)}</span>`;
+    }
+
+    return `
+      <div class="popup-content">
+        <div class="popup-name">${pharmacy.name}</div>
+        <span class="popup-status pharmacy-status ${statusClass}">${statusLabel}</span>
+        <div class="popup-address">
+          <span class="material-icons-round">location_on</span>
+          ${pharmacy.address}
+        </div>
+        <div class="popup-footer">
+          ${distanceHtml}
+          <button class="popup-btn" onclick="App.showDetail(${pharmacy.id})">Détails</button>
+        </div>
+      </div>
+    `;
+  },
+
+  /* ---------- Bounds ---------- */
+
+  /**
+   * Fit map bounds to show all visible markers
+   */
+  fitToMarkers() {
+    const visibleMarkers = this.markers.filter(e => e.visible);
+    if (visibleMarkers.length === 0) return;
+
+    const group = L.featureGroup(visibleMarkers.map(e => e.marker));
+    this.map.fitBounds(group.getBounds(), {
+      padding: [50, 50],
+      maxZoom: 15,
+      duration: 0.8
+    });
+  }
+};
