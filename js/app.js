@@ -139,14 +139,30 @@ const App = {
     document.getElementById('detailCallBtn').addEventListener('click', () => {
       if (this.currentPharmacy) Utils.callPhone(this.currentPharmacy.phone);
     });
-    document.getElementById('detailDirectionsBtn').addEventListener('click', () => {
-      if (this.currentPharmacy) Utils.openDirections(this.currentPharmacy.lat, this.currentPharmacy.lng);
+    document.getElementById('detailDirectionsBtn').addEventListener('click', async () => {
+      if (this.currentPharmacy) {
+        try {
+          this.showToast("Calcul de l'itinéraire...", "info");
+          await PharmacyMap.drawRoute(this.currentPharmacy.lat, this.currentPharmacy.lng);
+          this.closeDetail();
+          this.setBottomSheetState('peek');
+          this.showToast("Itinéraire tracé sur la carte", "success");
+        } catch (err) {
+          this.showToast(err.message, "error");
+        }
+      }
     });
     document.getElementById('detailMapsBtn').addEventListener('click', () => {
       if (this.currentPharmacy) Utils.openInMaps(this.currentPharmacy.lat, this.currentPharmacy.lng, this.currentPharmacy.name);
     });
     document.getElementById('detailShareBtn').addEventListener('click', () => {
       if (this.currentPharmacy) Utils.sharePharmacy(this.currentPharmacy);
+    });
+
+    /* --- Clear Route --- */
+    document.getElementById('clearRouteBtn').addEventListener('click', () => {
+      PharmacyMap.clearRoute();
+      this.showToast("Itinéraire effacé", "info");
     });
 
     /* --- About View --- */
@@ -474,7 +490,15 @@ const App = {
             Utils.callPhone(pharmacy.phone);
             break;
           case 'directions':
-            Utils.openDirections(pharmacy.lat, pharmacy.lng);
+            this.showToast("Calcul de l'itinéraire...", "info");
+            PharmacyMap.drawRoute(pharmacy.lat, pharmacy.lng)
+              .then(() => {
+                this.setBottomSheetState('peek');
+                this.showToast("Itinéraire tracé sur la carte", "success");
+              })
+              .catch(err => {
+                this.showToast(err.message, "error");
+              });
             break;
           case 'locate':
             PharmacyMap.selectPharmacy(pharmacy);
@@ -712,11 +736,23 @@ const App = {
   /**
    * Handle "Directions" FAB
    */
-  handleDirections() {
-    if (this.currentPharmacy) {
-      Utils.openDirections(this.currentPharmacy.lat, this.currentPharmacy.lng);
+  async handleDirections() {
+    let target = this.currentPharmacy;
+    if (!target && PharmacyMap.selectedId) {
+      target = PharmacyData.getById(PharmacyMap.selectedId);
+    }
+
+    if (target) {
+      try {
+        this.showToast("Calcul de l'itinéraire...", "info");
+        await PharmacyMap.drawRoute(target.lat, target.lng);
+        this.setBottomSheetState('peek');
+        this.showToast("Itinéraire tracé sur la carte", "success");
+      } catch (err) {
+        this.showToast(err.message, "error");
+      }
     } else {
-      this.showToast('Sélectionnez d\'abord une pharmacie', 'info');
+      this.showToast("Sélectionnez d'abord une pharmacie", "info");
     }
   },
 

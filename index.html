@@ -19,6 +19,8 @@
 
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Leaflet Routing Machine CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 
   <!-- App CSS -->
   <link rel="stylesheet" href="css/style.css">
@@ -52,6 +54,12 @@
 
   <!-- ==================== Map Container ==================== -->
   <div id="map"></div>
+
+  <!-- Clear Route Floating Button -->
+  <button class="clear-route-btn hidden" id="clearRouteBtn" aria-label="Effacer l'itinéraire">
+    <span class="material-icons-round">close</span>
+    <span>Effacer l'itinéraire</span>
+  </button>
 
   <!-- ==================== FAB Buttons ==================== -->
   <div class="fab-container" id="fabContainer">
@@ -245,6 +253,8 @@
 
   <!-- ==================== Scripts ==================== -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Leaflet Routing Machine JS -->
+  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
   <script src="js/data.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/map.js"></script>

@@ -1279,7 +1279,68 @@ img {
   .detail-modal,
   .about-view,
   .toast,
-  #map {
+  #map,
+  .clear-route-btn {
     display: none !important;
   }
+}
+
+/* ---------- Clear Route Floating Button ---------- */
+.clear-route-btn {
+  position: fixed;
+  top: 130px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: 0.85rem;
+  box-shadow: var(--shadow-lg);
+  transition: var(--transition);
+  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clear-route-btn:hover {
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.clear-route-btn:active {
+  transform: translateX(-50%) scale(0.95);
+}
+
+.clear-route-btn .material-icons-round {
+  font-size: 18px;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateX(-50%) translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ---------- Leaflet Routing Machine Overrides ---------- */
+.leaflet-routing-container {
+  display: none !important;
+}
+
+/* Make sure default geocoder / itinerary container is hidden */
+.leaflet-routing-geocoders {
+  display: none !important;
 }

@@ -11,6 +11,7 @@ const PharmacyMap = {
   userLng: null,
   selectedMarker: null,
   selectedId: null,
+  routingControl: null,
 
   /* ---------- Initialization ---------- */
 
@@ -174,6 +175,81 @@ const PharmacyMap = {
   centerOnUser() {
     if (this.userLat !== null && this.userLng !== null) {
       this.centerOn(this.userLat, this.userLng, 15);
+    }
+  },
+
+  /**
+   * Draw the route from user position to destination
+   * @param {number} destLat - Destination Latitude
+   * @param {number} destLng - Destination Longitude
+   */
+  async drawRoute(destLat, destLng) {
+    // Check if user location is available
+    if (this.userLat === null || this.userLng === null) {
+      try {
+        await this.updateUserPosition();
+      } catch (err) {
+        console.error("Unable to get user location for routing:", err);
+        throw new Error("Veuillez autoriser l'accès à la position GPS pour tracer l'itinéraire.");
+      }
+    }
+
+    // Clear any existing route
+    this.clearRoute();
+
+    // Create Leaflet Routing Machine control
+    try {
+      this.routingControl = L.Routing.control({
+        waypoints: [
+          L.latLng(this.userLat, this.userLng),
+          L.latLng(destLat, destLng)
+        ],
+        router: L.Routing.osrmv1({
+          serviceUrl: 'https://router.project-osrm.org/route/v1'
+        }),
+        lineOptions: {
+          styles: [
+            { color: '#3b82f6', opacity: 0.85, weight: 6 }
+          ],
+          addWaypoints: false
+        },
+        createMarker: function() { return null; }, // Hide default markers
+        addWaypoints: false,
+        draggableWaypoints: false,
+        fitSelectedRoutes: true,
+        show: false
+      }).addTo(this.map);
+
+      // Show clear button
+      const clearBtn = document.getElementById('clearRouteBtn');
+      if (clearBtn) {
+        clearBtn.classList.remove('hidden');
+      }
+
+      // Close open popups
+      this.map.closePopup();
+      return true;
+    } catch (err) {
+      console.error("Routing error:", err);
+      throw new Error("Erreur lors du calcul de l'itinéraire. Vérifiez votre connexion internet.");
+    }
+  },
+
+  /**
+   * Clear active routing path
+   */
+  clearRoute() {
+    if (this.routingControl) {
+      try {
+        this.map.removeControl(this.routingControl);
+      } catch (e) {
+        console.warn("Error removing routing control:", e);
+      }
+      this.routingControl = null;
+    }
+    const clearBtn = document.getElementById('clearRouteBtn');
+    if (clearBtn) {
+      clearBtn.classList.add('hidden');
     }
   },
 
