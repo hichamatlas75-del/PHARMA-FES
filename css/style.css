@@ -1344,3 +1344,39 @@ img {
 .leaflet-routing-geocoders {
   display: none !important;
 }
+
+/* ---------- List Group Headers ---------- */
+.list-group-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin: 12px 0 10px 0;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: var(--radius-sm);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.list-group-header.de-garde-header {
+  color: var(--accent);
+  background: rgba(59, 130, 246, 0.1);
+  border-left: 4px solid var(--accent);
+}
+
+.list-group-header.other-header {
+  color: var(--text-secondary);
+  background: rgba(241, 245, 249, 0.95);
+  border-left: 4px solid var(--text-secondary);
+  margin-top: 20px;
+}
+
+.list-group-header .material-icons-round {
+  font-size: 16px;
+}

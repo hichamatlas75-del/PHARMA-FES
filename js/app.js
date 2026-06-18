@@ -58,10 +58,8 @@ const App = {
       PharmacyMap.showUserPosition(pos.lat, pos.lng);
       /* Refresh popups with distance info */
       PharmacyMap.refreshMarkerIcons();
-      /* If in nearby mode, refresh list */
-      if (this.currentFilter === 'nearby') {
-        this.applyFilter('nearby');
-      }
+      /* Refresh list to calculate distances, sort and group */
+      this.applyFilter(this.currentFilter);
     } catch (err) {
       console.warn('Geolocation unavailable:', err.message);
     }
@@ -203,7 +201,14 @@ const App = {
 
     searchClear.classList.remove('hidden');
 
-    const results = PharmacyData.search(query);
+    let results = PharmacyData.search(query);
+    if (PharmacyMap.userLat !== null) {
+      results = results.map(p => ({
+        ...p,
+        distance: Utils.haversineDistance(PharmacyMap.userLat, PharmacyMap.userLng, p.lat, p.lng)
+      }));
+      results.sort((a, b) => a.distance - b.distance);
+    }
 
     if (results.length === 0) {
       searchResults.innerHTML = `
@@ -311,6 +316,9 @@ const App = {
           }
           return p;
         });
+        if (PharmacyMap.userLat !== null) {
+          pharmacies.sort((a, b) => a.distance - b.distance);
+        }
         title = 'De garde aujourd\'hui';
         const gardeIds = new Set(allGarde.map(p => p.id));
         PharmacyMap.filterMarkers(p => gardeIds.has(p.id));
@@ -325,6 +333,7 @@ const App = {
             ...p,
             distance: Utils.haversineDistance(PharmacyMap.userLat, PharmacyMap.userLng, p.lat, p.lng)
           }));
+          pharmacies.sort((a, b) => a.distance - b.distance);
         }
         title = 'Pharmacies';
         PharmacyMap.showAllMarkers();
@@ -459,10 +468,46 @@ const App = {
       return;
     }
 
-    let html = '';
-    pharmacies.forEach((pharmacy, i) => {
-      html += this.createPharmacyCard(pharmacy, i);
+    // Group into de garde vs others
+    const gardePharmacies = [];
+    const otherPharmacies = [];
+
+    pharmacies.forEach(p => {
+      const status = Utils.getStatus(p);
+      if (status === 'garde-jour' || status === 'garde-nuit') {
+        gardePharmacies.push(p);
+      } else {
+        otherPharmacies.push(p);
+      }
     });
+
+    let html = '';
+
+    if (gardePharmacies.length > 0) {
+      html += `
+        <div class="list-group-header de-garde-header">
+          <span class="material-icons-round">shield</span>
+          <span>Pharmacies de garde (${gardePharmacies.length})</span>
+        </div>
+      `;
+      gardePharmacies.forEach((pharmacy, i) => {
+        html += this.createPharmacyCard(pharmacy, i);
+      });
+    }
+
+    if (otherPharmacies.length > 0) {
+      if (gardePharmacies.length > 0) {
+        html += `
+          <div class="list-group-header other-header">
+            <span class="material-icons-round">local_pharmacy</span>
+            <span>Autres pharmacies (${otherPharmacies.length})</span>
+          </div>
+        `;
+      }
+      otherPharmacies.forEach((pharmacy, i) => {
+        html += this.createPharmacyCard(pharmacy, gardePharmacies.length + i);
+      });
+    }
 
     content.innerHTML = html;
 
