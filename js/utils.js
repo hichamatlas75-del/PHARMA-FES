@@ -106,7 +106,16 @@ const Utils = {
     const gardeInfo = PharmacyData.isDeGarde(pharmacy.id, now);
 
     if (gardeInfo.isGarde) {
-      return gardeInfo.type === 'jour' ? 'garde-jour' : 'garde-nuit';
+      const hours = now.getHours();
+      const isNight = hours >= 20 || hours < 8; // Night guard hours: 20:00 to 08:00
+      
+      if (gardeInfo.type === 'nuit') {
+        return isNight ? 'garde-nuit' : 'closed';
+      } else if (gardeInfo.type === 'jour') {
+        return isNight ? 'closed' : 'garde-jour';
+      } else { // 'jour-nuit' or default
+        return isNight ? 'garde-nuit' : 'garde-jour';
+      }
     }
 
     return this.isOpen(pharmacy) ? 'open' : 'closed';
