@@ -856,13 +856,17 @@ const App = {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const html = await response.text();
 
-      // Regex-based robust parser tested and validated
-      const h3Regex = /<h3[^>]*>([^<]+)<\/h3>/g;
+      // Regex-based parser. Pharmacy names are wrapped in a nested <a> tag
+      // inside the <h3> (<h3><a href="...">Name</a></h3>), so we capture
+      // the full inner content and strip any nested tags to get plain text.
+      const h3Regex = /<h3[^>]*>([\s\S]*?)<\/h3>/g;
       let match;
       const h3Matches = [];
       while ((match = h3Regex.exec(html)) !== null) {
+        const name = match[1].replace(/<[^>]+>/g, '').trim();
+        if (!name) continue;
         h3Matches.push({
-          name: match[1].trim(),
+          name: name,
           index: match.index
         });
       }
