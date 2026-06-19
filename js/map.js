@@ -186,6 +186,9 @@ const PharmacyMap = {
    * @param {number} destLng - Destination Longitude
    */
   async drawRoute(destLat, destLng) {
+    if (this.map) {
+      this.map.invalidateSize();
+    }
     // Check if user location is available
     if (this.userLat === null || this.userLng === null) {
       try {
@@ -262,6 +265,9 @@ const PharmacyMap = {
    * @param {Object} pharmacy - Pharmacy object
    */
   selectPharmacy(pharmacy) {
+    if (this.map) {
+      this.map.invalidateSize();
+    }
     this.clearSelection();
 
     const entry = this.markerLookup[pharmacy.id];

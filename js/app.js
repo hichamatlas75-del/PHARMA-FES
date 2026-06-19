@@ -127,6 +127,7 @@ const App = {
 
     /* --- Detail Modal --- */
     document.getElementById('detailClose').addEventListener('click', () => this.closeDetail());
+    document.getElementById('backToListBtn').addEventListener('click', () => this.closeDetail());
     document.getElementById('detailModal').addEventListener('click', e => {
       if (e.target === document.getElementById('detailModal')) {
         this.closeDetail();
@@ -142,8 +143,8 @@ const App = {
         try {
           this.showToast("Calcul de l'itinéraire...", "info");
           await PharmacyMap.drawRoute(this.currentPharmacy.lat, this.currentPharmacy.lng);
-          this.closeDetail();
-          this.setBottomSheetState('peek');
+          document.getElementById('detailModal').classList.remove('active');
+          document.body.style.overflow = '';
           this.showToast("Itinéraire tracé sur la carte", "success");
         } catch (err) {
           this.showToast(err.message, "error");
@@ -541,7 +542,7 @@ const App = {
             this.showToast("Calcul de l'itinéraire...", "info");
             PharmacyMap.drawRoute(pharmacy.lat, pharmacy.lng)
               .then(() => {
-                this.setBottomSheetState('peek');
+                document.body.classList.add('map-view-active');
                 this.showToast("Itinéraire tracé sur la carte", "success");
               })
               .catch(err => {
@@ -549,8 +550,7 @@ const App = {
               });
             break;
           case 'locate':
-            PharmacyMap.selectPharmacy(pharmacy);
-            this.setBottomSheetState('peek');
+            this.showDetail(pharmacy.id);
             break;
         }
       });
@@ -699,6 +699,7 @@ const App = {
     /* Show modal */
     document.getElementById('detailModal').classList.add('active');
     document.body.style.overflow = 'hidden';
+    document.body.classList.add('map-view-active');
 
     /* Center map on pharmacy */
     PharmacyMap.selectPharmacy(pharmacy);
@@ -720,6 +721,7 @@ const App = {
   closeDetail() {
     document.getElementById('detailModal').classList.remove('active');
     document.body.style.overflow = '';
+    document.body.classList.remove('map-view-active');
     this.currentPharmacy = null;
     PharmacyMap.clearSelection();
   },
@@ -803,7 +805,7 @@ const App = {
       try {
         this.showToast("Calcul de l'itinéraire...", "info");
         await PharmacyMap.drawRoute(target.lat, target.lng);
-        this.setBottomSheetState('peek');
+        document.body.classList.add('map-view-active');
         this.showToast("Itinéraire tracé sur la carte", "success");
       } catch (err) {
         this.showToast(err.message, "error");

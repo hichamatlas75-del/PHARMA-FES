@@ -301,6 +301,15 @@ img {
   position: fixed;
   inset: 0;
   z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+body.map-view-active #map {
+  opacity: 1;
+  pointer-events: all;
+  z-index: 12;
 }
 
 /* Custom marker overrides */
@@ -476,34 +485,24 @@ img {
 /* ---------- Bottom Sheet ---------- */
 .bottom-sheet {
   position: fixed;
+  top: 132px;
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 10;
   background: var(--surface);
-  border-radius: 20px 20px 0 0;
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.1);
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translateY(calc(100% - 80px));
-  will-change: transform;
+  border-radius: 0;
+  box-shadow: none;
+  transform: none !important;
+  transition: opacity 0.3s ease;
 }
 
-.bottom-sheet.half {
-  transform: translateY(50%);
-}
-
-.bottom-sheet.full {
-  transform: translateY(0);
+body.map-view-active .bottom-sheet {
+  display: none !important;
 }
 
 .bottom-sheet-handle {
-  width: 40px;
-  height: 4px;
-  background: var(--border);
-  border-radius: 4px;
-  margin: 12px auto;
-  cursor: grab;
-  transition: var(--transition);
+  display: none !important;
 }
 
 .bottom-sheet-handle:hover {
@@ -534,9 +533,9 @@ img {
 }
 
 .bottom-sheet-content {
-  padding: 0 16px 16px;
+  padding: 0 16px 88px;
   overflow-y: auto;
-  max-height: calc(100vh - 180px);
+  max-height: calc(100vh - 132px - 60px);
   -webkit-overflow-scrolling: touch;
 }
 
@@ -1206,25 +1205,18 @@ img {
 /* ---------- Responsive: Desktop (>768px) ---------- */
 @media (min-width: 769px) {
   .bottom-sheet {
-    width: 380px;
-    height: 100vh;
+    width: 100% !important;
+    max-width: 680px;
+    height: calc(100vh - 140px) !important;
     border-radius: 0;
-    left: 0;
+    left: 50% !important;
     right: auto;
-    top: 0;
+    top: 140px;
     bottom: 0;
-    transform: translateX(-100%);
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.08);
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .bottom-sheet.half,
-  .bottom-sheet.full {
-    transform: translateX(0);
-  }
-
-  .bottom-sheet.peek-desktop {
-    transform: translateX(-100%);
+    transform: translateX(-50%) !important;
+    box-shadow: none;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
   }
 
   .bottom-sheet-handle {
@@ -1256,10 +1248,10 @@ img {
   }
 
   .search-container {
-    max-width: 480px;
-    left: 400px;
-    transform: none;
-    padding: 0 24px;
+    max-width: 680px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    padding: 0 16px;
   }
 }
 
@@ -1379,4 +1371,66 @@ img {
 
 .list-group-header .material-icons-round {
   font-size: 16px;
+}
+
+/* ---------- Map View Active Adjustments ---------- */
+body.map-view-active .search-container {
+  display: none !important;
+}
+
+/* Hide map-specific buttons by default in list view */
+#fabDirections,
+#fabMaps,
+#fabMyLocation {
+  display: none !important;
+}
+
+/* Show them only when map is active */
+body.map-view-active #fabDirections,
+body.map-view-active #fabMaps,
+body.map-view-active #fabMyLocation {
+  display: flex !important;
+}
+
+/* Back to List Floating Button */
+.back-to-list-btn {
+  position: fixed;
+  top: 76px;
+  left: 16px;
+  z-index: 1002;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: 0.85rem;
+  box-shadow: var(--shadow-lg);
+  transition: var(--transition);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+}
+
+.back-to-list-btn:hover {
+  background: var(--primary-bg);
+  color: var(--primary);
+  border-color: var(--primary-light);
+}
+
+.back-to-list-btn:active {
+  transform: scale(0.95);
+}
+
+.back-to-list-btn .material-icons-round {
+  font-size: 18px;
+}
+
+body.map-view-active .back-to-list-btn {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
 }
