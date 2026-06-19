@@ -1278,6 +1278,11 @@ body.map-view-active .bottom-sheet {
 }
 
 /* ---------- Clear Route Floating Button ---------- */
+/* Ne doit jamais flotter au-dessus de la liste : uniquement visible en vue carte */
+body:not(.map-view-active) .clear-route-btn {
+  display: none !important;
+}
+
 .clear-route-btn {
   position: fixed;
   top: 130px;
