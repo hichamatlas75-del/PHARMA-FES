@@ -6212,15 +6212,12 @@ const PharmacyData = {
    * @returns {{ jour: Array, nuit: Array }} Day and night guard pharmacies
    */
   getDeGarde(date) {
-    if (this.realDeGardeList) {
-      const active = this.pharmacies.filter(p => p.realGardeType);
-      const jour = active.filter(p => p.realGardeType === 'jour' || p.realGardeType === 'jour-nuit');
-      const nuit = active.filter(p => p.realGardeType === 'nuit' || p.realGardeType === 'jour-nuit');
-      return { jour, nuit };
+    if (!this.realDeGardeList) {
+      return { jour: [], nuit: [] };
     }
-    const dayOfYear = this._getDayOfYear(date);
-    const jour = this.pharmacies.filter(p => (p.id + dayOfYear) % 6 === 0);
-    const nuit = this.pharmacies.filter(p => (p.id + dayOfYear + 3) % 6 === 0);
+    const active = this.pharmacies.filter(p => p.realGardeType);
+    const jour = active.filter(p => p.realGardeType === 'jour' || p.realGardeType === 'jour-nuit');
+    const nuit = active.filter(p => p.realGardeType === 'nuit' || p.realGardeType === 'jour-nuit');
     return { jour, nuit };
   },
 
@@ -6234,21 +6231,14 @@ const PharmacyData = {
     const p = this.getById(pharmacyId);
     if (!p) return { isGarde: false, type: null };
 
-    if (this.realDeGardeList) {
-      return {
-        isGarde: !!p.realGardeType,
-        type: p.realGardeType
-      };
+    if (!this.realDeGardeList) {
+      return { isGarde: false, type: null };
     }
 
-    const dayOfYear = this._getDayOfYear(date);
-    if ((pharmacyId + dayOfYear) % 6 === 0) {
-      return { isGarde: true, type: 'jour' };
-    }
-    if ((pharmacyId + dayOfYear + 3) % 6 === 0) {
-      return { isGarde: true, type: 'nuit' };
-    }
-    return { isGarde: false, type: null };
+    return {
+      isGarde: !!p.realGardeType,
+      type: p.realGardeType
+    };
   },
 
   /**

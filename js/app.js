@@ -316,11 +316,12 @@ const App = {
         break;
 
       case 'garde': {
-        const garde = PharmacyData.getDeGarde(new Date());
-        const allGardeMap = new Map();
-        [...garde.jour, ...garde.nuit].forEach(p => allGardeMap.set(p.id, p));
-        const allGarde = [...allGardeMap.values()];
-        pharmacies = allGarde.map(p => {
+        const allPharmacies = PharmacyData.getAll();
+        const activeGarde = allPharmacies.filter(p => {
+          const status = Utils.getStatus(p);
+          return status === 'garde-jour' || status === 'garde-nuit';
+        });
+        pharmacies = activeGarde.map(p => {
           if (PharmacyMap.userLat !== null) {
             return {
               ...p,
@@ -332,8 +333,8 @@ const App = {
         if (PharmacyMap.userLat !== null) {
           pharmacies.sort((a, b) => a.distance - b.distance);
         }
-        title = 'De garde aujourd\'hui';
-        const gardeIds = new Set(allGarde.map(p => p.id));
+        title = 'De garde actuellement';
+        const gardeIds = new Set(activeGarde.map(p => p.id));
         PharmacyMap.filterMarkers(p => gardeIds.has(p.id));
         PharmacyMap.fitToMarkers();
         break;
@@ -468,9 +469,12 @@ const App = {
     const content = document.getElementById('bottomSheetContent');
 
     // Update tab counts
-    const allCount = PharmacyData.getAll().length;
-    const gardeObj = PharmacyData.getDeGarde(new Date());
-    const gardeCount = [...new Set([...gardeObj.jour, ...gardeObj.nuit].map(p => p.id))].length;
+    const allPharmacies = PharmacyData.getAll();
+    const allCount = allPharmacies.length;
+    const gardeCount = allPharmacies.filter(p => {
+      const status = Utils.getStatus(p);
+      return status === 'garde-jour' || status === 'garde-nuit';
+    }).length;
     
     document.getElementById('countAll').textContent = allCount;
     document.getElementById('countGarde').textContent = gardeCount;
@@ -893,8 +897,8 @@ const App = {
         throw new Error("Aucune pharmacie de garde trouvée");
       }
     } catch (err) {
-      console.warn("Failed to fetch real-time on-duty pharmacies, falling back to rotation logic:", err);
-      this.showToast("Mode hors-ligne : garde simulée", "info");
+      console.warn("Failed to fetch real-time on-duty pharmacies:", err);
+      this.showToast("Impossible de charger les gardes en temps réel", "error");
     }
   },
 
