@@ -353,8 +353,8 @@ const PharmacyData = {
       "address": "64 hay jdid bensouda",
       "quartier": "Zouagha",
       "phone": "0535655983",
-      "lat": 34.03329849,
-      "lng": -5,
+      "lat": 34.018337,
+      "lng": -5.066892,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -451,8 +451,8 @@ const PharmacyData = {
       "address": "",
       "quartier": "Fes",
       "phone": "0535623089",
-      "lat": 34.03469849,
-      "lng": -5.01619005,
+      "lat": 34.037476,
+      "lng": -5.000066,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -1585,8 +1585,8 @@ const PharmacyData = {
       "address": "206 bd rabia hay hassani 3 route ain chkef",
       "quartier": "Agdal",
       "phone": "0535612184",
-      "lat": 34.03329849,
-      "lng": -5,
+      "lat": 34.0103,
+      "lng": -5.00578,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -1795,8 +1795,8 @@ const PharmacyData = {
       "address": "",
       "quartier": "Fes",
       "phone": "0535962961",
-      "lat": 34.03329849,
-      "lng": -5,
+      "lat": 33.966552,
+      "lng": -5.027265,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -3153,8 +3153,8 @@ const PharmacyData = {
       "address": "n° 139 lotissement al mostakbal hay al massira",
       "quartier": "Zouagha",
       "phone": "0535729187",
-      "lat": 34.0181246,
-      "lng": -5.0078451,
+      "lat": 34.011137,
+      "lng": -5.065053,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -3279,8 +3279,8 @@ const PharmacyData = {
       "address": "bis 33. jnane ben chrif bab el khoukha, entre café papillon et café tanger",
       "quartier": "Medina Jnanat",
       "phone": "0535649458",
-      "lat": 34.03329849,
-      "lng": -5,
+      "lat": 34.065622,
+      "lng": -4.962482,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -3349,8 +3349,8 @@ const PharmacyData = {
       "address": "narjis. hay al wafaa 2. proche de la charité accueil des enfants",
       "quartier": "Saiss",
       "phone": "0535614597",
-      "lat": 34.0181246,
-      "lng": -5.0078451,
+      "lat": 34.021171,
+      "lng": -4.983051,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -4119,8 +4119,8 @@ const PharmacyData = {
       "address": "rte d'imouzzer lotiss. labar n°61",
       "quartier": "Saiss",
       "phone": "0535963300",
-      "lat": 34.03329849,
-      "lng": -5,
+      "lat": 34.012366,
+      "lng": -5.002742,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -4945,8 +4945,8 @@ const PharmacyData = {
       "address": "cité 2 rue tariq al moqadassa dher lmahraz",
       "quartier": "Agdal",
       "phone": "06117062720535657902",
-      "lat": 34.03469849,
-      "lng": -5.01619005,
+      "lat": 34.036966,
+      "lng": -4.989631,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -5379,8 +5379,8 @@ const PharmacyData = {
       "address": "n°201 blad tahri, sahrij gnaoua",
       "quartier": "Medina Jnanat",
       "phone": "0535630816",
-      "lat": 34.03329849,
-      "lng": -5,
+      "lat": 34.050738,
+      "lng": -4.957289,
       "hours": {
         "open": "08:30",
         "close": "20:30"
