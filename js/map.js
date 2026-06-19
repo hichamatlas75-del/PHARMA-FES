@@ -273,6 +273,12 @@ const PharmacyMap = {
     const entry = this.markerLookup[pharmacy.id];
     if (!entry) return;
 
+    // Ensure the marker is visible/added to the map before selecting it
+    if (!entry.visible) {
+      entry.marker.addTo(this.map);
+      entry.visible = true;
+    }
+
     this.selectedId = pharmacy.id;
     this.selectedMarker = entry.marker;
 
