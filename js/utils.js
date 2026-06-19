@@ -36,6 +36,25 @@ const Utils = {
   },
 
   /**
+   * Check if a pharmacy's coordinates fall on one of the known
+   * placeholder/dummy clusters present in the source data, instead of a
+   * real geocoded position. ~82 entries in the current dataset fall
+   * within these clusters (many stacked on the exact same point).
+   * @param {Object} pharmacy - Pharmacy object
+   * @returns {boolean} True if the location should be treated as approximate
+   */
+  hasApproximateLocation(pharmacy) {
+    const clusters = [
+      { lat: 34.0333, lng: -5 },
+      { lat: 34.0346, lng: -5.016 },
+      { lat: 34.0181, lng: -5.007 }
+    ];
+    return clusters.some(c =>
+      Math.abs(pharmacy.lat - c.lat) < 0.005 && Math.abs(pharmacy.lng - c.lng) < 0.005
+    );
+  },
+
+  /**
    * Get user geolocation as Promise
    * @returns {Promise<{lat: number, lng: number}>}
    */
@@ -188,11 +207,14 @@ const Utils = {
    * Open Google Maps at location
    * @param {number} lat - Latitude
    * @param {number} lng - Longitude
-   * @param {string} name - Location name
+   * @param {string} name - Location name (unused — kept for call-site compatibility)
    */
   openInMaps(lat, lng, name) {
-    const q = encodeURIComponent(name || '');
-    const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}&query_place_id=${q}`;
+    /* query_place_id must be a real Google Place ID — we don't have one,
+       so it was previously set to the pharmacy name, which is invalid
+       and could make Maps ignore the link. Pin the exact coordinates
+       instead, which is the documented, reliable format. */
+    const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
     window.open(url, '_blank');
   },
 

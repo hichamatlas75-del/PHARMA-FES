@@ -47,7 +47,7 @@ const PharmacyMap = {
 
     pharmacies.forEach(pharmacy => {
       const status = Utils.getStatus(pharmacy);
-      const icon = this.createMarkerIcon(status);
+      const icon = this.createMarkerIcon(status, Utils.hasApproximateLocation(pharmacy));
 
       const marker = L.marker([pharmacy.lat, pharmacy.lng], { icon })
         .addTo(this.map);
@@ -85,9 +85,10 @@ const PharmacyMap = {
   /**
    * Create custom marker DivIcon based on status
    * @param {string} status - Pharmacy status
+   * @param {boolean} isApproximate - Whether the coordinates are a known placeholder
    * @returns {L.DivIcon}
    */
-  createMarkerIcon(status) {
+  createMarkerIcon(status, isApproximate = false) {
     const colors = {
       'open':       { bg: '#16a34a', border: '#15803d' },
       'garde-jour': { bg: '#3b82f6', border: '#2563eb' },
@@ -95,12 +96,13 @@ const PharmacyMap = {
       'closed':     { bg: '#94a3b8', border: '#64748b' }
     };
     const c = colors[status] || colors['closed'];
+    const borderStyle = isApproximate ? 'dashed' : 'solid';
 
     return L.divIcon({
       className: 'custom-marker',
       html: `<div style="
         background:${c.bg};
-        border:2px solid ${c.border};
+        border:2px ${borderStyle} ${c.border};
         width:32px;height:32px;
         border-radius:50%;
         display:flex;align-items:center;justify-content:center;
@@ -333,7 +335,7 @@ const PharmacyMap = {
   refreshMarkerIcons() {
     this.markers.forEach(entry => {
       const status = Utils.getStatus(entry.pharmacy);
-      const icon = this.createMarkerIcon(status);
+      const icon = this.createMarkerIcon(status, Utils.hasApproximateLocation(entry.pharmacy));
       entry.marker.setIcon(icon);
       /* Update popup content */
       entry.marker.setPopupContent(this.createPopupContent(entry.pharmacy));
@@ -358,10 +360,15 @@ const PharmacyMap = {
       distanceHtml = `<span class="popup-distance">📍 ${Utils.formatDistance(dist)}</span>`;
     }
 
+    const approxWarning = Utils.hasApproximateLocation(pharmacy)
+      ? `<p style="font-size:0.7rem;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:6px 8px;margin:6px 0;">⚠️ Position approximative — à vérifier</p>`
+      : '';
+
     return `
       <div class="popup-content">
         <div class="popup-name">${pharmacy.name}</div>
         <span class="popup-status pharmacy-status ${statusClass}">${statusLabel}</span>
+        ${approxWarning}
         <div class="popup-address">
           <span class="material-icons-round">location_on</span>
           ${pharmacy.address}

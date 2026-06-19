@@ -1292,7 +1292,7 @@ const PharmacyData = {
     "quartier": "Medina Jnanat",
     "phone": "0535649215",
     "lat": 33.9420388,
-    "lng": -5.5567979,
+    "lng": -5.0567979,
     "hours": {
       "open": "08:30",
       "close": "20:30"
@@ -5813,7 +5813,7 @@ const PharmacyData = {
     "address": "pharmacie yasmine, n°346 bd d'oran montfleuri 1 pres arrondissement zohour",
     "quartier": "Saiss",
     "phone": "0535619643",
-    "lat": 34.8694789,
+    "lat": 34.0694789,
     "lng": -5.0135871,
     "hours": {
       "open": "08:30",
@@ -6134,7 +6134,7 @@ const PharmacyData = {
           lat: real.lat || 34.0333,
           lng: real.lng || -4.9998,
           hours: { open: "08:30", close: "20:30" },
-          isH24: true,
+          isH24: realGardeType === 'jour-nuit',
           realGardeType: realGardeType
         };
         this.pharmacies.push(newPharma);
@@ -6214,7 +6214,9 @@ const PharmacyData = {
   getDeGarde(date) {
     if (this.realDeGardeList) {
       const active = this.pharmacies.filter(p => p.realGardeType);
-      return { jour: active, nuit: [] };
+      const jour = active.filter(p => p.realGardeType === 'jour' || p.realGardeType === 'jour-nuit');
+      const nuit = active.filter(p => p.realGardeType === 'nuit' || p.realGardeType === 'jour-nuit');
+      return { jour, nuit };
     }
     const dayOfYear = this._getDayOfYear(date);
     const jour = this.pharmacies.filter(p => (p.id + dayOfYear) % 6 === 0);

@@ -306,7 +306,9 @@ const App = {
 
       case 'garde': {
         const garde = PharmacyData.getDeGarde(new Date());
-        const allGarde = [...garde.jour, ...garde.nuit];
+        const allGardeMap = new Map();
+        [...garde.jour, ...garde.nuit].forEach(p => allGardeMap.set(p.id, p));
+        const allGarde = [...allGardeMap.values()];
         pharmacies = allGarde.map(p => {
           if (PharmacyMap.userLat !== null) {
             return {
@@ -379,9 +381,6 @@ const App = {
     this.touchStartY = clientY;
 
     const sheet = document.getElementById('bottomSheet');
-    const rect = sheet.getBoundingClientRect();
-    this.sheetStartTop = rect.top;
-
     sheet.style.transition = 'none';
   },
 
@@ -394,7 +393,12 @@ const App = {
 
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     const deltaY = clientY - this.touchStartY;
-    const viewHeight = window.innerHeight;
+
+    /* CSS translateY percentages (.half = 50%, default = calc(100% - 80px))
+       are resolved against the sheet's OWN rendered height, not the
+       viewport height — so the drag math must match that basis. */
+    const sheet = document.getElementById('bottomSheet');
+    const sheetHeight = sheet.offsetHeight;
 
     /* Calculate new translateY based on current position */
     let targetTranslateY;
@@ -403,16 +407,15 @@ const App = {
         targetTranslateY = Math.max(0, deltaY);
         break;
       case 'half':
-        targetTranslateY = (viewHeight * 0.5) + deltaY;
+        targetTranslateY = (sheetHeight * 0.5) + deltaY;
         targetTranslateY = Math.max(0, targetTranslateY);
         break;
       default:
-        targetTranslateY = (viewHeight - 80) + deltaY;
+        targetTranslateY = (sheetHeight - 80) + deltaY;
         targetTranslateY = Math.max(0, targetTranslateY);
         break;
     }
 
-    const sheet = document.getElementById('bottomSheet');
     sheet.style.transform = `translateY(${targetTranslateY}px)`;
   },
 
@@ -645,6 +648,15 @@ const App = {
 
     document.getElementById('detailAddressValue').textContent = `${pharmacy.address}, ${pharmacy.quartier}`;
     document.getElementById('detailQuartierValue').textContent = pharmacy.quartier;
+
+    /* Warn when this pharmacy's coordinates are a known placeholder
+       rather than a real geocoded position */
+    const addressLabel = document.querySelector('#detailAddress .detail-info-label');
+    if (addressLabel) {
+      addressLabel.innerHTML = Utils.hasApproximateLocation(pharmacy)
+        ? 'Adresse <span style="color:#92400e;">⚠️ position approximative</span>'
+        : 'Adresse';
+    }
 
     /* Phone */
     const phoneValue = document.getElementById('detailPhoneValue');
@@ -899,12 +911,11 @@ const App = {
         const allPharmacies = PharmacyData.getAll();
         PharmacyMap.addMarkers(allPharmacies);
         
-        // Refresh the list view if we are on 'garde' filter
-        if (this.currentFilter === 'garde') {
-          this.applyFilter('garde');
-        } else {
-          this.updateStatuses();
-        }
+        // addMarkers() shows every marker again, which silently overrides
+        // any active 'nearby'/'garde' filter. Always reapply the current
+        // filter (map + list) so the view stays consistent regardless of
+        // bottom sheet state.
+        this.applyFilter(this.currentFilter);
         
         this.showToast(`${parsedRealGuards.length} pharmacies de garde réelles chargées`, 'success');
       } else {
