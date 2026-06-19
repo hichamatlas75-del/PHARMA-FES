@@ -94,9 +94,18 @@ const App = {
       }
     });
 
+    /* --- Tab Buttons --- */
+    document.getElementById('tabAll').addEventListener('click', () => {
+      if (this.currentFilter !== 'all') this.applyFilter('all');
+    });
+    document.getElementById('tabGarde').addEventListener('click', () => {
+      if (this.currentFilter !== 'garde') this.applyFilter('garde');
+    });
+    document.getElementById('tabNearby').addEventListener('click', () => {
+      if (this.currentFilter !== 'nearby') this.handleNearby();
+    });
+
     /* --- FAB Buttons --- */
-    document.getElementById('fabNearby').addEventListener('click', () => this.handleNearby());
-    document.getElementById('fabGarde').addEventListener('click', () => this.handleGarde());
     document.getElementById('fabMaps').addEventListener('click', () => this.handleOpenMaps());
     document.getElementById('fabDirections').addEventListener('click', () => this.handleDirections());
     document.getElementById('fabMyLocation').addEventListener('click', () => this.handleMyLocation());
@@ -285,9 +294,10 @@ const App = {
   applyFilter(filter) {
     this.currentFilter = filter;
 
-    /* Update FAB active states */
-    document.getElementById('fabNearby').classList.toggle('active', filter === 'nearby');
-    document.getElementById('fabGarde').classList.toggle('active', filter === 'garde');
+    /* Update Tab active states */
+    document.getElementById('tabAll').classList.toggle('active', filter === 'all');
+    document.getElementById('tabGarde').classList.toggle('active', filter === 'garde');
+    document.getElementById('tabNearby').classList.toggle('active', filter === 'nearby');
 
     let pharmacies;
     let title;
@@ -456,11 +466,21 @@ const App = {
    */
   populatePharmacyList(pharmacies, title) {
     const content = document.getElementById('bottomSheetContent');
-    const count = document.getElementById('bottomSheetCount');
-    const titleEl = document.getElementById('bottomSheetTitle');
 
-    if (title) titleEl.textContent = title;
-    count.textContent = pharmacies.length;
+    // Update tab counts
+    const allCount = PharmacyData.getAll().length;
+    const gardeObj = PharmacyData.getDeGarde(new Date());
+    const gardeCount = [...new Set([...gardeObj.jour, ...gardeObj.nuit].map(p => p.id))].length;
+    
+    document.getElementById('countAll').textContent = allCount;
+    document.getElementById('countGarde').textContent = gardeCount;
+    
+    if (PharmacyMap.userLat !== null) {
+      const nearbyCount = PharmacyData.getNearby(PharmacyMap.userLat, PharmacyMap.userLng, 10).length;
+      document.getElementById('countNearby').textContent = nearbyCount;
+    } else {
+      document.getElementById('countNearby').textContent = '-';
+    }
 
     if (pharmacies.length === 0) {
       content.innerHTML = `
@@ -851,87 +871,13 @@ const App = {
    */
   async fetchRealDeGarde() {
     try {
-      console.log("Fetching real-time on-duty pharmacies from Telecontact...");
-      const zones = ['agdal', 'ain-chkef', 'les-merinides', 'medina-jnanat', 'saiss', 'zouagha'];
-      const jours = [1, 2];
-      
-      const fetchPromises = [];
-      for (const zone of zones) {
-        for (const jour of jours) {
-          const url = `https://www.telecontact.ma/trouver/pharmacie-guarde-zone-jour-fonctionalite.php?ville=fes&zone=${zone}&jour=${jour}&act=pharmacie-ville-zone`;
-          fetchPromises.push(
-            fetch(url, {
-              headers: {
-                'Accept': 'application/json, text/javascript, */*; q=0.01',
-                'X-Requested-With': 'XMLHttpRequest'
-              }
-            })
-            .then(res => {
-              if (!res.ok) throw new Error(`HTTP ${res.status}`);
-              return res.json();
-            })
-            .then(json => {
-              return (json.data || []).map(p => ({ ...p, requestedJour: jour }));
-            })
-            .catch(err => {
-              console.warn(`Failed to fetch for zone ${zone}, jour ${jour}:`, err);
-              return [];
-            })
-          );
-        }
-      }
-      
-      const results = await Promise.all(fetchPromises);
-      const allFetched = results.flat();
-      
-      // Deduplicate by code_firme
-      const uniquePharmacies = new Map();
-      allFetched.forEach(item => {
-        const idKey = item.code_firme || `${item.rs_comp}_${item.tel}`;
-        if (!uniquePharmacies.has(idKey)) {
-          uniquePharmacies.set(idKey, item);
-        }
-      });
-      
-      const parsedRealGuards = [];
-      uniquePharmacies.forEach(item => {
-        if (!item.rs_comp) return;
-        
-        let guardType = 'jour-nuit';
-        const jourVal = parseInt(item.JOUR);
-        if (jourVal === 1) {
-          guardType = 'jour';
-        } else if (jourVal === 2) {
-          guardType = 'nuit';
-        } else if (jourVal === 3) {
-          guardType = 'jour-nuit';
-        } else {
-          guardType = item.requestedJour === 2 ? 'nuit' : 'jour';
-        }
-        
-        // Clean name
-        let cleanName = item.rs_comp;
-        cleanName = cleanName.replace(/&#x27;/g, "'")
-                             .replace(/&amp;/g, "&")
-                             .replace(/&quot;/g, '"')
-                             .replace(/&#39;/g, "'")
-                             .replace(/\s+/g, ' ')
-                             .trim();
-                             
-        // Normalize phone number
-        const phone = item.tel ? item.tel.replace(/\s+/g, '') : '';
-        
-        parsedRealGuards.push({
-          name: cleanName,
-          phone: phone,
-          lat: item.latitude ? parseFloat(item.latitude) : 0,
-          lng: item.longitude ? parseFloat(item.longitude) : 0,
-          guardType: guardType
-        });
-      });
-      
-      if (parsedRealGuards.length > 0) {
-        console.log(`Successfully parsed ${parsedRealGuards.length} real-time on-duty pharmacies:`, parsedRealGuards);
+      console.log("Fetching real-time on-duty pharmacies from proxy API...");
+      const response = await fetch('https://pharma-fes.pages.dev/api/garde');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const parsedRealGuards = await response.json();
+
+      if (parsedRealGuards && parsedRealGuards.length > 0) {
+        console.log(`Successfully loaded ${parsedRealGuards.length} real-time on-duty pharmacies:`, parsedRealGuards);
         // Set the on-duty pharmacies in our data object
         PharmacyData.setRealDeGarde(parsedRealGuards);
         

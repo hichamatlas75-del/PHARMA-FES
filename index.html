@@ -69,14 +69,6 @@
 
   <!-- ==================== FAB Buttons ==================== -->
   <div class="fab-container" id="fabContainer">
-    <button class="fab-button" id="fabNearby" aria-label="Pharmacies proches">
-      <span class="material-icons-round">near_me</span>
-      <span class="fab-label">Proches</span>
-    </button>
-    <button class="fab-button" id="fabGarde" aria-label="Pharmacies de garde">
-      <span class="material-icons-round">shield</span>
-      <span class="fab-label">De garde</span>
-    </button>
     <button class="fab-button" id="fabMaps" aria-label="Ouvrir Maps">
       <span class="material-icons-round">map</span>
       <span class="fab-label">Maps</span>
@@ -94,9 +86,19 @@
   <!-- ==================== Bottom Sheet ==================== -->
   <div class="bottom-sheet" id="bottomSheet">
     <div class="bottom-sheet-handle" id="bottomSheetHandle"></div>
-    <div class="bottom-sheet-header">
-      <h2 id="bottomSheetTitle">Pharmacies</h2>
-      <span class="bottom-sheet-count" id="bottomSheetCount">30</span>
+    <div class="tabs-container">
+      <button class="tab-btn active" id="tabAll">
+        <span class="material-icons-round">local_pharmacy</span>
+        <span>Toutes (<span id="countAll">0</span>)</span>
+      </button>
+      <button class="tab-btn" id="tabGarde">
+        <span class="material-icons-round">shield</span>
+        <span>De garde (<span id="countGarde">0</span>)</span>
+      </button>
+      <button class="tab-btn" id="tabNearby">
+        <span class="material-icons-round">near_me</span>
+        <span>Proches (<span id="countNearby">0</span>)</span>
+      </button>
     </div>
     <div class="bottom-sheet-content" id="bottomSheetContent">
       <!-- Pharmacy cards populated by JS -->
