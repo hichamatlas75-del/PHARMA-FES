@@ -849,63 +849,85 @@ const App = {
    */
   async fetchRealDeGarde() {
     try {
-      console.log("Fetching real-time on-duty pharmacies...");
-      const response = await fetch('https://fes.pharmacieenpermanence.ma', {
-        headers: { 'Accept': 'text/html' }
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const html = await response.text();
-
-      // Regex-based parser. Pharmacy names are wrapped in a nested <a> tag
-      // inside the <h3> (<h3><a href="...">Name</a></h3>), so we capture
-      // the full inner content and strip any nested tags to get plain text.
-      const h3Regex = /<h3[^>]*>([\s\S]*?)<\/h3>/g;
-      let match;
-      const h3Matches = [];
-      while ((match = h3Regex.exec(html)) !== null) {
-        const name = match[1].replace(/<[^>]+>/g, '').trim();
-        if (!name) continue;
-        h3Matches.push({
-          name: name,
-          index: match.index
-        });
+      console.log("Fetching real-time on-duty pharmacies from Telecontact...");
+      const zones = ['agdal', 'ain-chkef', 'les-merinides', 'medina-jnanat', 'saiss', 'zouagha'];
+      const jours = [1, 2];
+      
+      const fetchPromises = [];
+      for (const zone of zones) {
+        for (const jour of jours) {
+          const url = `https://www.telecontact.ma/trouver/pharmacie-guarde-zone-jour-fonctionalite.php?ville=fes&zone=${zone}&jour=${jour}&act=pharmacie-ville-zone`;
+          fetchPromises.push(
+            fetch(url, {
+              headers: {
+                'Accept': 'application/json, text/javascript, */*; q=0.01',
+                'X-Requested-With': 'XMLHttpRequest'
+              }
+            })
+            .then(res => {
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              return res.json();
+            })
+            .then(json => {
+              return (json.data || []).map(p => ({ ...p, requestedJour: jour }));
+            })
+            .catch(err => {
+              console.warn(`Failed to fetch for zone ${zone}, jour ${jour}:`, err);
+              return [];
+            })
+          );
+        }
       }
-
+      
+      const results = await Promise.all(fetchPromises);
+      const allFetched = results.flat();
+      
+      // Deduplicate by code_firme
+      const uniquePharmacies = new Map();
+      allFetched.forEach(item => {
+        const idKey = item.code_firme || `${item.rs_comp}_${item.tel}`;
+        if (!uniquePharmacies.has(idKey)) {
+          uniquePharmacies.set(idKey, item);
+        }
+      });
+      
       const parsedRealGuards = [];
-      for (let i = 0; i < h3Matches.length; i++) {
-        const current = h3Matches[i];
-        if (!current.name.toLowerCase().includes("pharmacie")) continue;
-
-        const nextIndex = (i < h3Matches.length - 1) ? h3Matches[i+1].index : html.length;
-        const context = html.slice(current.index, Math.min(nextIndex, current.index + 3000));
-
-        const telMatch = context.match(/href="tel:([^"]+)"/);
-        const phone = telMatch ? telMatch[1].trim() : "";
-        if (!phone) continue; // Filter out headers/footers with no tel link
-
-        const mapsMatch = context.match(/destination=([0-9.-]+),([0-9.-]+)/);
-        const lat = mapsMatch ? parseFloat(mapsMatch[1]) : 0;
-        const lng = mapsMatch ? parseFloat(mapsMatch[2]) : 0;
-
-        const guardMatch = context.match(/Garde\s+([^<]+)/i);
-        const guardType = guardMatch ? guardMatch[1].trim() : "Jour et Nuit";
-
+      uniquePharmacies.forEach(item => {
+        if (!item.rs_comp) return;
+        
+        let guardType = 'jour-nuit';
+        const jourVal = parseInt(item.JOUR);
+        if (jourVal === 1) {
+          guardType = 'jour';
+        } else if (jourVal === 2) {
+          guardType = 'nuit';
+        } else if (jourVal === 3) {
+          guardType = 'jour-nuit';
+        } else {
+          guardType = item.requestedJour === 2 ? 'nuit' : 'jour';
+        }
+        
         // Clean name
-        let cleanName = current.name;
+        let cleanName = item.rs_comp;
         cleanName = cleanName.replace(/&#x27;/g, "'")
                              .replace(/&amp;/g, "&")
                              .replace(/&quot;/g, '"')
-                             .replace(/&#39;/g, "'");
-
+                             .replace(/&#39;/g, "'")
+                             .replace(/\s+/g, ' ')
+                             .trim();
+                             
+        // Normalize phone number
+        const phone = item.tel ? item.tel.replace(/\s+/g, '') : '';
+        
         parsedRealGuards.push({
           name: cleanName,
           phone: phone,
-          lat: lat,
-          lng: lng,
+          lat: item.latitude ? parseFloat(item.latitude) : 0,
+          lng: item.longitude ? parseFloat(item.longitude) : 0,
           guardType: guardType
         });
-      }
-
+      });
+      
       if (parsedRealGuards.length > 0) {
         console.log(`Successfully parsed ${parsedRealGuards.length} real-time on-duty pharmacies:`, parsedRealGuards);
         // Set the on-duty pharmacies in our data object
@@ -915,15 +937,12 @@ const App = {
         const allPharmacies = PharmacyData.getAll();
         PharmacyMap.addMarkers(allPharmacies);
         
-        // addMarkers() shows every marker again, which silently overrides
-        // any active 'nearby'/'garde' filter. Always reapply the current
-        // filter (map + list) so the view stays consistent regardless of
-        // bottom sheet state.
+        // Apply current filter to keep UI state consistent
         this.applyFilter(this.currentFilter);
         
         this.showToast(`${parsedRealGuards.length} pharmacies de garde réelles chargées`, 'success');
       } else {
-        throw new Error("Aucune pharmacie de garde trouvée dans le HTML");
+        throw new Error("Aucune pharmacie de garde trouvée");
       }
     } catch (err) {
       console.warn("Failed to fetch real-time on-duty pharmacies, falling back to rotation logic:", err);
