@@ -147,6 +147,9 @@ const App = {
     document.getElementById('detailCallBtn').addEventListener('click', () => {
       if (this.currentPharmacy) Utils.callPhone(this.currentPharmacy.phone);
     });
+    document.getElementById('detailNavBtn').addEventListener('click', () => {
+      if (this.currentPharmacy) Utils.openDirections(this.currentPharmacy.lat, this.currentPharmacy.lng);
+    });
     document.getElementById('detailDirectionsBtn').addEventListener('click', async () => {
       if (this.currentPharmacy) {
         try {
