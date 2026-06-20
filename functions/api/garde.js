@@ -1,32 +1,91 @@
 export async function onRequestGet(context) {
-  try {
-    const zones = ['agdal', 'ain-chkef', 'les-merinides', 'medina-jnanat', 'saiss', 'zouagha'];
-    const jours = [1, 2];
-    const fetchPromises = [];
+  const url = new URL(context.request.url);
+  const debug = url.searchParams.get('debug') === '1';
 
+  const zones = ['agdal', 'ain-chkef', 'les-merinides', 'medina-jnanat', 'saiss', 'zouagha'];
+  const jours = [1, 2];
+
+  const baseHeaders = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'X-Requested-With': 'XMLHttpRequest'
+  };
+
+  /**
+   * Fetch une combinaison zone/jour et retourne un diagnostic complet
+   * (statut, type de contenu, aperçu du corps, erreur de parsing éventuelle)
+   * au lieu d'avaler silencieusement les échecs.
+   */
+  async function fetchZoneJour(zone, jour) {
+    const apiUrl = `https://www.telecontact.ma/trouver/pharmacie-guarde-zone-jour-fonctionalite.php?ville=fes&zone=${zone}&jour=${jour}&act=pharmacie-ville-zone`;
+    const pageUrl = `https://www.telecontact.ma/pharmacie-de-garde-zone/fes/${zone}.html`;
+
+    try {
+      const res = await fetch(apiUrl, {
+        headers: {
+          ...baseHeaders,
+          /* Beaucoup d'endpoints AJAX vérifient que la requête vient bien
+             de leur propre page — sans ça, certains renvoient un corps
+             vide ou une erreur silencieuse plutôt qu'un vrai 4xx/5xx. */
+          'Referer': pageUrl,
+          'Origin': 'https://www.telecontact.ma'
+        }
+      });
+
+      const rawText = await res.text();
+      let parsed = null;
+      let parseError = null;
+      try {
+        parsed = JSON.parse(rawText);
+      } catch (e) {
+        parseError = e.message;
+      }
+
+      const items = (parsed && Array.isArray(parsed.data))
+        ? parsed.data.map(p => ({ ...p, requestedJour: jour }))
+        : [];
+
+      return {
+        zone,
+        jour,
+        apiUrl,
+        status: res.status,
+        ok: res.ok,
+        contentType: res.headers.get('content-type'),
+        bodyPreview: rawText.slice(0, 500),
+        parseError,
+        dataCount: parsed && Array.isArray(parsed.data) ? parsed.data.length : null,
+        items
+      };
+    } catch (err) {
+      return { zone, jour, apiUrl, fetchError: err.message, items: [] };
+    }
+  }
+
+  try {
+    const tasks = [];
     for (const zone of zones) {
       for (const jour of jours) {
-        const url = `https://www.telecontact.ma/trouver/pharmacie-guarde-zone-jour-fonctionalite.php?ville=fes&zone=${zone}&jour=${jour}&act=pharmacie-ville-zone`;
-        fetchPromises.push(
-          fetch(url, {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-              'Accept': 'application/json, text/javascript, */*; q=0.01',
-              'X-Requested-With': 'XMLHttpRequest'
-            }
-          })
-          .then(async (res) => {
-            if (!res.ok) return [];
-            const json = await res.json();
-            return (json.data || []).map(p => ({ ...p, requestedJour: jour }));
-          })
-          .catch(() => [])
-        );
+        tasks.push(fetchZoneJour(zone, jour));
       }
     }
+    const results = await Promise.all(tasks);
 
-    const results = await Promise.all(fetchPromises);
-    const allFetched = results.flat();
+    /* ---- Mode diagnostic ----
+       Visite /api/garde?debug=1 dans ton navigateur (qui, lui, a bien
+       accès à telecontact.ma) pour voir exactement ce que chaque
+       requête a reçu : statut HTTP, type de contenu, aperçu du corps,
+       erreur de parsing JSON le cas échéant. */
+    if (debug) {
+      return new Response(JSON.stringify(results, null, 2), {
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
+
+    const allFetched = results.flatMap(r => r.items);
 
     // Deduplicate by code_firme
     const uniquePharmacies = new Map();
