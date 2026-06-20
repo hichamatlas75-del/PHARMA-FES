@@ -884,7 +884,13 @@ const App = {
   async fetchRealDeGarde() {
     try {
       console.log("Fetching real-time on-duty pharmacies from proxy API...");
-      const response = await fetch('https://pharma-fes.pages.dev/api/garde');
+      
+      const isLocalFile = window.location.protocol === 'file:';
+      const apiUrl = isLocalFile 
+        ? 'https://pharma-fes.pages.dev/api/garde' 
+        : '/api/garde';
+
+      const response = await fetch(apiUrl);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const parsedRealGuards = await response.json();
 

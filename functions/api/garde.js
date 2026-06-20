@@ -2,6 +2,18 @@ export async function onRequestGet(context) {
   const url = new URL(context.request.url);
   const debug = url.searchParams.get('debug') === '1';
 
+  // Vérification du cache Edge (uniquement hors mode debug)
+  const cache = caches.default;
+  if (!debug) {
+    try {
+      const cachedResponse = await cache.match(context.request.url);
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+    } catch (e) {
+      console.warn("Échec de la lecture du cache :", e.message);
+    }
+  }
   const zones = ['agdal', 'ain-chkef', 'les-merinides', 'medina-jnanat', 'saiss', 'zouagha'];
   const jours = [1, 2];
 
@@ -133,13 +145,23 @@ export async function onRequestGet(context) {
       });
     });
 
-    return new Response(JSON.stringify(parsedRealGuards), {
+    const response = new Response(JSON.stringify(parsedRealGuards), {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'public, max-age=120'
+        'Cache-Control': 'public, s-maxage=600'
       }
     });
+
+    if (!debug) {
+      try {
+        context.waitUntil(cache.put(context.request.url, response.clone()));
+      } catch (e) {
+        console.warn("Échec de l'écriture dans le cache :", e.message);
+      }
+    }
+
+    return response;
 
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
