@@ -35,7 +35,10 @@ const App = {
     /* 4. Setup event listeners */
     this.setupEventListeners();
 
-    /* 5. Populate bottom sheet with pharmacy list */
+    /* 5. Update tab counts */
+    this.updateTabCounts();
+
+    /* 6. Populate bottom sheet with pharmacy list */
     this.populatePharmacyList(pharmacies);
 
     /* 6. Fetch real-time on-duty pharmacies (non-blocking) */
@@ -49,6 +52,15 @@ const App = {
 
     /* 8. Set bottom sheet to half on load after a brief delay */
     setTimeout(() => this.setBottomSheetState('half'), 800);
+
+    /* 9. Register Service Worker for PWA (if supported and not running locally via file://) */
+    if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registered successfully:', reg.scope))
+          .catch(err => console.warn('Service Worker registration failed:', err));
+      });
+    }
   },
 
   /**
@@ -60,7 +72,8 @@ const App = {
       PharmacyMap.showUserPosition(pos.lat, pos.lng);
       /* Refresh popups with distance info */
       PharmacyMap.refreshMarkerIcons();
-      /* Refresh list to calculate distances, sort and group */
+      /* Refresh tab counts and list to calculate distances, sort and group */
+      this.updateTabCounts();
       this.applyFilter(this.currentFilter);
     } catch (err) {
       console.warn('Geolocation unavailable:', err.message);
@@ -195,6 +208,47 @@ const App = {
         }
       }
     });
+
+    /* --- Bottom Sheet Content Delegation --- */
+    const content = document.getElementById('bottomSheetContent');
+    content.addEventListener('click', e => {
+      /* Prevent card click when action button is clicked */
+      const btn = e.target.closest('.pharmacy-card-action');
+      if (btn) {
+        e.stopPropagation();
+        const id = parseInt(btn.dataset.id);
+        const action = btn.dataset.action;
+        const pharmacy = PharmacyData.getById(id);
+        if (!pharmacy) return;
+
+        switch (action) {
+          case 'call':
+            Utils.callPhone(pharmacy.phone);
+            break;
+          case 'directions':
+            this.showToast("Calcul de l'itinéraire...", "info");
+            PharmacyMap.drawRoute(pharmacy.lat, pharmacy.lng)
+              .then(() => {
+                document.body.classList.add('map-view-active');
+                this.showToast("Itinéraire tracé sur la carte", "success");
+              })
+              .catch(err => {
+                this.showToast(err.message, "error");
+              });
+            break;
+          case 'locate':
+            this.showDetail(pharmacy.id);
+            break;
+        }
+        return;
+      }
+
+      const card = e.target.closest('.pharmacy-card');
+      if (card) {
+        const id = parseInt(card.dataset.id);
+        this.showDetail(id);
+      }
+    });
   },
 
   /* ========================================================
@@ -249,8 +303,8 @@ const App = {
             <span class="material-icons-round">local_pharmacy</span>
           </div>
           <div class="search-result-text">
-            <div class="search-result-name">${pharmacy.name}</div>
-            <div class="search-result-address">${pharmacy.address} — ${pharmacy.quartier}</div>
+            <div class="search-result-name">${Utils.escapeHtml(pharmacy.name)}</div>
+            <div class="search-result-address">${Utils.escapeHtml(pharmacy.address)} — ${Utils.escapeHtml(pharmacy.quartier)}</div>
           </div>
           <span class="pharmacy-status ${statusClass}" style="font-size:0.65rem;padding:2px 8px;">${Utils.getStatusLabel(status)}</span>
         </div>
@@ -306,6 +360,9 @@ const App = {
     document.getElementById('tabAll').classList.toggle('active', filter === 'all');
     document.getElementById('tabGarde').classList.toggle('active', filter === 'garde');
     document.getElementById('tabNearby').classList.toggle('active', filter === 'nearby');
+    document.getElementById('tabAll').setAttribute('aria-selected', filter === 'all' ? 'true' : 'false');
+    document.getElementById('tabGarde').setAttribute('aria-selected', filter === 'garde' ? 'true' : 'false');
+    document.getElementById('tabNearby').setAttribute('aria-selected', filter === 'nearby' ? 'true' : 'false');
 
     let pharmacies;
     let title;
@@ -469,14 +526,9 @@ const App = {
      ======================================================== */
 
   /**
-   * Populate pharmacy cards in bottom sheet
-   * @param {Array} pharmacies - Array of pharmacies to display
-   * @param {string} title - Optional header title
+   * Update and cache counts shown on tab buttons
    */
-  populatePharmacyList(pharmacies, title) {
-    const content = document.getElementById('bottomSheetContent');
-
-    // Update tab counts
+  updateTabCounts() {
     const allPharmacies = PharmacyData.getAll();
     const allCount = allPharmacies.length;
     const gardeCount = allPharmacies.filter(p => {
@@ -493,6 +545,50 @@ const App = {
     } else {
       document.getElementById('countNearby').textContent = '-';
     }
+  },
+
+  /**
+   * Show skeleton loading placeholder cards while fetching data
+   */
+  showLoadingSkeleton() {
+    const content = document.getElementById('bottomSheetContent');
+    if (!content) return;
+    let html = '';
+    // Generate 3 skeleton cards
+    for (let i = 0; i < 3; i++) {
+      html += `
+        <div class="pharmacy-card skeleton">
+          <div class="pharmacy-card-header">
+            <div class="skeleton-text skeleton-title"></div>
+            <div class="skeleton-text skeleton-badge"></div>
+          </div>
+          <div class="pharmacy-card-address" style="display:flex; align-items:center; gap:8px;">
+            <span class="material-icons-round" style="color:var(--border);">location_on</span>
+            <div class="skeleton-text skeleton-line" style="flex:1; margin-bottom:0;"></div>
+          </div>
+          <div class="pharmacy-card-quartier" style="margin-left:28px;">
+            <div class="skeleton-text skeleton-subline" style="margin-bottom:0;"></div>
+          </div>
+          <div class="pharmacy-card-footer">
+            <div class="skeleton-text skeleton-distance" style="margin-bottom:0;"></div>
+            <div class="pharmacy-card-actions">
+              <div class="skeleton-button"></div>
+              <div class="skeleton-button"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    content.innerHTML = html;
+  },
+
+  /**
+   * Populate pharmacy cards in bottom sheet
+   * @param {Array} pharmacies - Array of pharmacies to display
+   * @param {string} title - Optional header title
+   */
+  populatePharmacyList(pharmacies, title) {
+    const content = document.getElementById('bottomSheetContent');
 
     if (pharmacies.length === 0) {
       content.innerHTML = `
@@ -546,47 +642,6 @@ const App = {
     }
 
     content.innerHTML = html;
-
-    /* Add click handlers to cards */
-    content.querySelectorAll('.pharmacy-card').forEach(card => {
-      card.addEventListener('click', e => {
-        /* Prevent card click when action button is clicked */
-        if (e.target.closest('.pharmacy-card-action')) return;
-        const id = parseInt(card.dataset.id);
-        this.showDetail(id);
-      });
-    });
-
-    /* Add click handlers to action buttons */
-    content.querySelectorAll('.pharmacy-card-action').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        const id = parseInt(btn.dataset.id);
-        const action = btn.dataset.action;
-        const pharmacy = PharmacyData.getById(id);
-        if (!pharmacy) return;
-
-        switch (action) {
-          case 'call':
-            Utils.callPhone(pharmacy.phone);
-            break;
-          case 'directions':
-            this.showToast("Calcul de l'itinéraire...", "info");
-            PharmacyMap.drawRoute(pharmacy.lat, pharmacy.lng)
-              .then(() => {
-                document.body.classList.add('map-view-active');
-                this.showToast("Itinéraire tracé sur la carte", "success");
-              })
-              .catch(err => {
-                this.showToast(err.message, "error");
-              });
-            break;
-          case 'locate':
-            this.showDetail(pharmacy.id);
-            break;
-        }
-      });
-    });
   },
 
   /**
@@ -629,14 +684,14 @@ const App = {
     return `
       <div class="pharmacy-card" data-id="${pharmacy.id}" style="animation-delay:${delay}s;">
         <div class="pharmacy-card-header">
-          <span class="pharmacy-card-name">${pharmacy.name}</span>
+          <span class="pharmacy-card-name">${Utils.escapeHtml(pharmacy.name)}</span>
           <span class="pharmacy-status ${statusClass}">${statusLabel}</span>
         </div>
         <div class="pharmacy-card-address">
           <span class="material-icons-round">location_on</span>
-          ${pharmacy.address}
+          ${Utils.escapeHtml(pharmacy.address)}
         </div>
-        <div class="pharmacy-card-quartier">${pharmacy.quartier}</div>
+        <div class="pharmacy-card-quartier">${Utils.escapeHtml(pharmacy.quartier)}</div>
         <div class="pharmacy-card-footer">
           ${distanceHtml}
           <div class="pharmacy-card-actions">
@@ -694,7 +749,8 @@ const App = {
     const phoneValue = document.getElementById('detailPhoneValue');
     const phoneRow = document.getElementById('detailPhone');
     if (pharmacy.phone) {
-      phoneValue.innerHTML = `<a href="tel:${pharmacy.phone}" style="color:var(--accent);font-weight:600;">${this.formatPhoneNumber(pharmacy.phone)}</a>`;
+      const safePhone = pharmacy.phone.replace(/[^0-9+\-\s]/g, '');
+      phoneValue.innerHTML = `<a href="tel:${safePhone}" style="color:var(--accent);font-weight:600;">${this.formatPhoneNumber(safePhone)}</a>`;
       phoneRow.classList.remove('hidden');
     } else {
       phoneValue.textContent = 'Non disponible';
@@ -729,7 +785,11 @@ const App = {
     }
 
     /* Show modal */
-    document.getElementById('detailModal').classList.add('active');
+    const detailModal = document.getElementById('detailModal');
+    detailModal.classList.add('active');
+    detailModal.setAttribute('aria-hidden', 'false');
+    const closeBtn = document.getElementById('detailClose');
+    if (closeBtn) closeBtn.focus();
     document.body.style.overflow = 'hidden';
     document.body.classList.add('map-view-active');
 
@@ -751,7 +811,9 @@ const App = {
    * Close detail modal
    */
   closeDetail() {
-    document.getElementById('detailModal').classList.remove('active');
+    const detailModal = document.getElementById('detailModal');
+    detailModal.classList.remove('active');
+    detailModal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
     document.body.classList.remove('map-view-active');
     this.currentPharmacy = null;
@@ -763,12 +825,18 @@ const App = {
      ======================================================== */
 
   showAbout() {
-    document.getElementById('aboutView').classList.add('active');
+    const aboutView = document.getElementById('aboutView');
+    aboutView.classList.add('active');
+    aboutView.setAttribute('aria-hidden', 'false');
+    const aboutBack = document.getElementById('aboutBack');
+    if (aboutBack) aboutBack.focus();
     document.body.style.overflow = 'hidden';
   },
 
   closeAbout() {
-    document.getElementById('aboutView').classList.remove('active');
+    const aboutView = document.getElementById('aboutView');
+    aboutView.classList.remove('active');
+    aboutView.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
   },
 
@@ -856,8 +924,9 @@ const App = {
       const pos = await PharmacyMap.updateUserPosition();
       PharmacyMap.centerOnUser();
       this.showToast('Position trouvée !', 'success');
-      /* Refresh marker popups to include distance */
+      /* Refresh marker popups and tab counts to include distance */
       PharmacyMap.refreshMarkerIcons();
+      this.updateTabCounts();
     } catch (err) {
       this.showToast(err.message, 'error');
     }
@@ -872,6 +941,7 @@ const App = {
    */
   updateStatuses() {
     PharmacyMap.refreshMarkerIcons();
+    this.updateTabCounts();
     /* Refresh the list if visible */
     if (this.bottomSheetState !== 'peek') {
       this.applyFilter(this.currentFilter);
@@ -885,12 +955,20 @@ const App = {
     try {
       console.log("Fetching real-time on-duty pharmacies from proxy API...");
       
+      const isFirstLoad = this.lastGardeSignature === null;
+      if (isFirstLoad) {
+        this.showLoadingSkeleton();
+      }
+
       const isLocalFile = window.location.protocol === 'file:';
       const apiUrl = isLocalFile 
         ? 'https://pharma-fes.pages.dev/api/garde' 
         : '/api/garde';
 
-      const response = await fetch(apiUrl);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const response = await fetch(apiUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const parsedRealGuards = await response.json();
 
@@ -913,6 +991,7 @@ const App = {
 
       console.log(`Successfully loaded ${parsedRealGuards.length} real-time on-duty pharmacies:`, parsedRealGuards);
       PharmacyData.setRealDeGarde(parsedRealGuards);
+      this.updateTabCounts();
 
       const allPharmacies = PharmacyData.getAll();
       PharmacyMap.addMarkers(allPharmacies);
@@ -928,6 +1007,10 @@ const App = {
       if (!this.gardeFetchFailed) {
         this.gardeFetchFailed = true;
         this.showToast("Impossible de charger les gardes en temps réel", "error");
+      }
+      // If first load failed, we should still refresh the list to remove the skeleton loading screen
+      if (this.lastGardeSignature === null) {
+        this.applyFilter(this.currentFilter);
       }
     }
   },

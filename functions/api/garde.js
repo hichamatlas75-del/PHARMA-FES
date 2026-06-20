@@ -105,6 +105,12 @@ export async function onRequestGet(context) {
       const idKey = item.code_firme || `${item.rs_comp}_${item.tel}`;
       if (!uniquePharmacies.has(idKey)) {
         uniquePharmacies.set(idKey, item);
+      } else {
+        // Merge guard types: if a pharmacy appears as both jour and nuit, combine them
+        const existing = uniquePharmacies.get(idKey);
+        if (existing.requestedJour !== item.requestedJour) {
+          existing.JOUR = '3'; // jour-nuit combined
+        }
       }
     });
 
@@ -169,4 +175,16 @@ export async function onRequestGet(context) {
       headers: { 'Content-Type': 'application/json' }
     });
   }
+}
+
+export function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Max-Age': '86400'
+    }
+  });
 }

@@ -14,7 +14,7 @@
   --surface: #ffffff;
   --text: #1e293b;
   --text-secondary: #64748b;
-  --text-light: #94a3b8;
+  --text-light: #475569;
   --border: #e2e8f0;
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
@@ -1154,6 +1154,51 @@ body.map-view-active .bottom-sheet {
   border-radius: var(--radius-sm);
 }
 
+/* ---------- Skeleton Styles ---------- */
+.skeleton-text {
+  height: 16px;
+  margin-bottom: 8px;
+  background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-title {
+  width: 60%;
+  height: 20px;
+}
+
+.skeleton-badge {
+  width: 25%;
+  height: 18px;
+  border-radius: 12px;
+}
+
+.skeleton-line {
+  width: 85%;
+  height: 14px;
+}
+
+.skeleton-subline {
+  width: 40%;
+  height: 14px;
+}
+
+.skeleton-distance {
+  width: 30%;
+  height: 14px;
+}
+
+.skeleton-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
 .hidden {
   display: none !important;
 }
@@ -1501,4 +1546,209 @@ body.map-view-active .back-to-list-btn {
     padding: 10px 16px;
     font-size: 0.82rem;
   }
+}
+
+/* ============================================================
+   ACCESSIBILITY & DARK MODE IMPROVEMENTS
+   ============================================================ */
+
+/* ---------- 1. Dark Mode ---------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #22c55e;
+    --primary-light: #4ade80;
+    --primary-dark: #16a34a;
+    --primary-bg: #052e16;
+    --accent: #60a5fa;
+    --accent-light: #93c5fd;
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --text: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-light: #cbd5e1;
+    --border: #334155;
+    --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Map tiles — subtle brightness/contrast adjustment for dark mode */
+  .leaflet-tile-pane {
+    filter: brightness(0.75) contrast(1.1) saturate(0.9);
+  }
+
+  /* Leaflet popups */
+  .leaflet-popup-content-wrapper,
+  .leaflet-popup-tip {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .leaflet-popup-content-wrapper {
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Emergency cards */
+  .emergency-card {
+    background: var(--surface);
+    border-color: var(--border);
+    box-shadow: var(--shadow);
+  }
+
+  .emergency-card:hover {
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Pharmacy cards */
+  .pharmacy-card {
+    background: var(--surface);
+    border-color: var(--border);
+    box-shadow: var(--shadow);
+  }
+
+  .pharmacy-card:hover {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .pharmacy-card-action {
+    background: var(--primary-bg);
+    color: var(--primary-light);
+    border-color: var(--border);
+  }
+
+  .pharmacy-card-action:hover {
+    background: var(--primary-dark);
+    color: var(--text);
+  }
+
+  /* Bottom sheet & detail panel */
+  .bottom-sheet,
+  .detail-panel {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  /* Search input */
+  .search-input {
+    background: var(--bg);
+    color: var(--text);
+    border-color: var(--border);
+  }
+
+  .search-input::placeholder {
+    color: var(--text-light);
+  }
+
+  /* Tabs */
+  .tab-btn {
+    color: var(--text-secondary);
+  }
+
+  .tab-btn.active {
+    color: var(--primary-light);
+  }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  /* FAB */
+  .fab-button {
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* About / info sections */
+  .about-section {
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  /* Scrollbar in dark mode */
+  ::-webkit-scrollbar-track {
+    background: var(--bg);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-light);
+  }
+}
+
+/* ---------- 2. Prefers Reduced Motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- 3. Focus Visible Styles ---------- */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+.tab-btn:focus-visible,
+.fab-button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.2);
+}
+
+/* ---------- 4. Touch Target Improvements (min 44×44px) ---------- */
+.search-clear {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pharmacy-card-action {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.detail-close {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-btn {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.about-back {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- 5. Smooth Scroll ---------- */
+html {
+  scroll-behavior: smooth;
+}
+
+.bottom-sheet-content {
+  scroll-behavior: smooth;
 }

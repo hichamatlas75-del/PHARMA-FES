@@ -299,5 +299,17 @@ const Utils = {
     const start = new Date(date.getFullYear(), 0, 0);
     const diff = date - start;
     return Math.floor(diff / 86400000);
+  },
+
+  /**
+   * Escape HTML entities to prevent XSS
+   * @param {string} str - Input string
+   * @returns {string} Escaped string
+   */
+  escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
   }
 };

@@ -378,12 +378,12 @@ const PharmacyMap = {
 
     return `
       <div class="popup-content">
-        <div class="popup-name">${pharmacy.name}</div>
+        <div class="popup-name">${Utils.escapeHtml(pharmacy.name)}</div>
         <span class="popup-status pharmacy-status ${statusClass}">${statusLabel}</span>
         ${approxWarning}
         <div class="popup-address">
           <span class="material-icons-round">location_on</span>
-          ${pharmacy.address}
+          ${Utils.escapeHtml(pharmacy.address)}
         </div>
         <div class="popup-footer">
           ${distanceHtml}

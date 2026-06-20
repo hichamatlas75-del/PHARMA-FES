@@ -2,7 +2,7 @@
 <html lang="fr" dir="ltr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Trouvez rapidement les pharmacies ouvertes et de garde à Fès, Maroc">
   <meta name="theme-color" content="#16a34a">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,15 +20,17 @@
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <!-- Leaflet Routing Machine CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
 
   <!-- App CSS -->
   <link rel="stylesheet" href="css/style.css">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
   <!-- ==================== App Header ==================== -->
-  <header class="app-header" id="appHeader">
+  <header class="app-header" id="appHeader" role="banner">
     <div class="header-left">
       <div class="app-logo" id="appLogo">
         <span class="material-icons-round">local_pharmacy</span>
@@ -41,7 +43,7 @@
   </header>
 
   <!-- ==================== Search Bar ==================== -->
-  <div class="search-container" id="searchContainer">
+  <section class="search-container" id="searchContainer" role="search" aria-label="Rechercher des pharmacies">
     <div class="search-bar">
       <span class="material-icons-round search-icon">search</span>
       <input type="text" id="searchInput" placeholder="Rechercher une pharmacie..." autocomplete="off">
@@ -50,10 +52,10 @@
       </button>
     </div>
     <div class="search-results hidden" id="searchResults"></div>
-  </div>
+  </section>
 
   <!-- ==================== Map Container ==================== -->
-  <div id="map"></div>
+  <main id="map" role="application" aria-label="Carte interactive des pharmacies"></main>
 
   <!-- Back to List Floating Button -->
   <button class="back-to-list-btn" id="backToListBtn" aria-label="Retour à la liste">
@@ -84,18 +86,18 @@
   </div>
 
   <!-- ==================== Bottom Sheet ==================== -->
-  <div class="bottom-sheet" id="bottomSheet">
+  <section class="bottom-sheet" id="bottomSheet" role="region" aria-label="Filtres et liste des pharmacies">
     <div class="bottom-sheet-handle" id="bottomSheetHandle"></div>
-    <div class="tabs-container">
-      <button class="tab-btn active" id="tabAll">
+    <div class="tabs-container" role="tablist">
+      <button class="tab-btn active" id="tabAll" role="tab" aria-selected="true" aria-controls="bottomSheetContent">
         <span class="material-icons-round">local_pharmacy</span>
         <span>Toutes (<span id="countAll">0</span>)</span>
       </button>
-      <button class="tab-btn" id="tabGarde">
+      <button class="tab-btn" id="tabGarde" role="tab" aria-selected="false" aria-controls="bottomSheetContent">
         <span class="material-icons-round">shield</span>
         <span>De garde (<span id="countGarde">0</span>)</span>
       </button>
-      <button class="tab-btn" id="tabNearby">
+      <button class="tab-btn" id="tabNearby" role="tab" aria-selected="false" aria-controls="bottomSheetContent">
         <span class="material-icons-round">near_me</span>
         <span>Proches (<span id="countNearby">0</span>)</span>
       </button>
@@ -103,10 +105,10 @@
     <div class="bottom-sheet-content" id="bottomSheetContent">
       <!-- Pharmacy cards populated by JS -->
     </div>
-  </div>
+  </section>
 
   <!-- ==================== Detail Modal ==================== -->
-  <div class="detail-modal" id="detailModal">
+  <div class="detail-modal" id="detailModal" role="dialog" aria-modal="true" aria-labelledby="detailName" aria-hidden="true">
     <div class="detail-modal-content" id="detailModalContent">
       <div class="detail-header">
         <div>
@@ -190,12 +192,12 @@
   </div>
 
   <!-- ==================== About View ==================== -->
-  <div class="about-view" id="aboutView">
+  <div class="about-view" id="aboutView" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" aria-hidden="true">
     <div class="about-header">
       <button class="about-back" id="aboutBack" aria-label="Retour">
         <span class="material-icons-round">arrow_back</span>
       </button>
-      <h2>À propos</h2>
+      <h2 id="aboutTitle">À propos</h2>
     </div>
     <div class="about-content">
       <div class="about-logo">
@@ -257,16 +259,17 @@
     </div>
   </div>
 
-  <!-- ==================== Toast Notification ==================== -->
-  <div class="toast" id="toast">
+  <div class="toast" id="toast" role="alert" aria-live="polite">
     <span class="material-icons-round toast-icon" id="toastIcon"></span>
     <span id="toastMessage"></span>
   </div>
 
+  <noscript><p style="padding:2em;text-align:center;">Cette application nécessite JavaScript pour fonctionner.</p></noscript>
+
   <!-- ==================== Scripts ==================== -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- Leaflet Routing Machine JS -->
-  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
   <script src="js/data.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/map.js"></script>

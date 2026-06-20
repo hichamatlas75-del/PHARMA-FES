@@ -6089,12 +6089,18 @@ const PharmacyData = {
              (Math.abs(lat - 34.0181) < 0.005 && Math.abs(lng - (-5.007)) < 0.005);
     };
 
-    // Reset guard status
+    // Remember original pharmacy count to trim dynamic entries on re-call
+    if (this._originalPharmacyCount == null) {
+      this._originalPharmacyCount = this.pharmacies.length;
+    }
+    // Remove any previously added dynamic pharmacies
+    this.pharmacies.length = this._originalPharmacyCount;
+
+    // Reset guard status on all original pharmacies
     this.pharmacies.forEach(p => {
       p.realGardeType = null;
       const match = this._findMatchingReal(p, listOfReal);
       if (match) {
-        // Set realGardeType based on guardType
         const gType = match.guardType ? match.guardType.toLowerCase() : '';
         if (gType.includes('nuit') && gType.includes('jour')) {
           p.realGardeType = 'jour-nuit';
@@ -6104,7 +6110,6 @@ const PharmacyData = {
           p.realGardeType = 'jour';
         }
 
-        // Overwrite local coordinates if they are placeholders and matched one is valid
         if (match.lat && match.lng && !isPlaceholder(match.lat, match.lng)) {
           p.lat = match.lat;
           p.lng = match.lng;
@@ -6113,10 +6118,10 @@ const PharmacyData = {
     });
 
     // Add unmatched real guards to the database dynamically
+    let nextId = Math.max(...this.pharmacies.map(p => p.id)) + 1;
     listOfReal.forEach(real => {
       const alreadyMatched = this.pharmacies.some(p => p.realGardeType && this._findMatchingReal(p, [real]));
       if (!alreadyMatched) {
-        const nextId = Math.max(...this.pharmacies.map(p => p.id)) + 1;
         const gType = real.guardType ? real.guardType.toLowerCase() : '';
         let realGardeType = 'jour';
         if (gType.includes('nuit') && gType.includes('jour')) {
@@ -6125,8 +6130,8 @@ const PharmacyData = {
           realGardeType = 'nuit';
         }
 
-        const newPharma = {
-          id: nextId,
+        this.pharmacies.push({
+          id: nextId++,
           name: real.name,
           address: real.address || "Fès",
           quartier: real.quartier || "Fès",
@@ -6136,19 +6141,19 @@ const PharmacyData = {
           hours: { open: "08:30", close: "20:30" },
           isH24: realGardeType === 'jour-nuit',
           realGardeType: realGardeType
-        };
-        this.pharmacies.push(newPharma);
+        });
       }
     });
   },
 
   _findMatchingReal(localPharma, listOfReal) {
-    // 1. Match by phone number
+    // 1. Match by phone number (require at least 9 matching digits)
     const localPhone = localPharma.phone ? localPharma.phone.replace(/[^0-9]/g, '') : '';
-    if (localPhone && localPhone.length >= 8) {
+    if (localPhone && localPhone.length >= 9) {
       const match = listOfReal.find(r => {
         const realPhone = r.phone ? r.phone.replace(/[^0-9]/g, '') : '';
-        return realPhone && (realPhone.endsWith(localPhone) || localPhone.endsWith(realPhone));
+        if (!realPhone || realPhone.length < 9) return false;
+        return realPhone === localPhone || realPhone.endsWith(localPhone) || localPhone.endsWith(realPhone);
       });
       if (match) return match;
     }
@@ -6165,10 +6170,10 @@ const PharmacyData = {
   _normalizeName(name) {
     if (!name) return "";
     let s = this._removeAccents(name.toLowerCase());
-    s = s.replace(/pharmacie/gi, "")
-         .replace(/pharma/gi, "")
+    s = s.replace(/\bpharmacie\b/gi, "")
+         .replace(/\bpharma\b/gi, "")
          .replace(/[^a-z0-9]/g, "");
-    return s.trim();
+    return s;
   },
 
   /**
