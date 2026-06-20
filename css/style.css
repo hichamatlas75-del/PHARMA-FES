@@ -1694,3 +1694,99 @@ html {
 .bottom-sheet-content {
   scroll-behavior: smooth;
 }
+
+/* ---------- 6. Navigation Panel ---------- */
+.navigation-panel {
+  position: fixed;
+  top: 72px;
+  left: 16px;
+  right: 16px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 1100;
+  border: 1px solid var(--border);
+  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.nav-direction-icon-container {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--primary-bg);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-direction-icon-container .material-icons-round {
+  font-size: 24px;
+}
+
+.nav-instruction-text-container {
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-instruction-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-instruction-sub {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.nav-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-control-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.nav-control-btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.nav-control-btn:active {
+  background: var(--border);
+}
+
+@media (min-width: 481px) {
+  .navigation-panel {
+    left: 50%;
+    right: auto;
+    width: calc(100% - 32px);
+    max-width: 528px;
+    transform: translateX(-50%);
+  }
+}

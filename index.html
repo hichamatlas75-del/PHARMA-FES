@@ -54,6 +54,25 @@
     <div class="search-results hidden" id="searchResults"></div>
   </section>
 
+  <!-- ==================== Navigation Panel ==================== -->
+  <div class="navigation-panel hidden" id="navigationPanel">
+    <div class="nav-direction-icon-container">
+      <span class="material-icons-round" id="navDirectionIcon">navigation</span>
+    </div>
+    <div class="nav-instruction-text-container">
+      <div class="nav-instruction-text" id="navInstructionText">Calcul de l'itinéraire...</div>
+      <div class="nav-instruction-sub" id="navInstructionSub">Veuillez patienter...</div>
+    </div>
+    <div class="nav-controls">
+      <button class="nav-control-btn" id="navPrevBtn" aria-label="Étape précédente">
+        <span class="material-icons-round">chevron_left</span>
+      </button>
+      <button class="nav-control-btn" id="navNextBtn" aria-label="Étape suivante">
+        <span class="material-icons-round">chevron_right</span>
+      </button>
+    </div>
+  </div>
+
   <!-- ==================== Map Container ==================== -->
   <main id="map" role="application" aria-label="Carte interactive des pharmacies"></main>
 

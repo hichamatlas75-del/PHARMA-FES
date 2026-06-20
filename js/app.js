@@ -188,6 +188,24 @@ const App = {
       if (this.currentPharmacy) Utils.sharePharmacy(this.currentPharmacy);
     });
 
+    /* --- Navigation Panel Steps --- */
+    const prevBtn = document.getElementById('navPrevBtn');
+    const nextBtn = document.getElementById('navNextBtn');
+    if (prevBtn && nextBtn) {
+      prevBtn.addEventListener('click', () => {
+        if (PharmacyMap.currentRouteStep > 0) {
+          PharmacyMap.currentRouteStep--;
+          PharmacyMap.updateNavigationUI();
+        }
+      });
+      nextBtn.addEventListener('click', () => {
+        if (PharmacyMap.currentRouteStep < PharmacyMap.currentRouteInstructions.length - 1) {
+          PharmacyMap.currentRouteStep++;
+          PharmacyMap.updateNavigationUI();
+        }
+      });
+    }
+
     /* --- Clear Route --- */
     document.getElementById('clearRouteBtn').addEventListener('click', () => {
       PharmacyMap.clearRoute();

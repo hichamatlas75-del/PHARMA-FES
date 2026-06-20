@@ -12,6 +12,9 @@ const PharmacyMap = {
   selectedMarker: null,
   selectedId: null,
   routingControl: null,
+  currentRouteInstructions: [],
+  currentRouteCoordinates: [],
+  currentRouteStep: 0,
 
   /* ---------- Initialization ---------- */
 
@@ -225,10 +228,31 @@ const PharmacyMap = {
         show: false
       }).addTo(this.map);
 
-      // Show clear button
+      // Listen to route findings
+      this.routingControl.on('routesfound', (e) => {
+        const routes = e.routes;
+        if (routes && routes.length > 0) {
+          const route = routes[0];
+          this.currentRouteInstructions = route.instructions || [];
+          this.currentRouteCoordinates = route.coordinates || [];
+          this.currentRouteStep = 0;
+          this.updateNavigationUI();
+        }
+      });
+
+      // Show clear button and navigation panel, hide search container
       const clearBtn = document.getElementById('clearRouteBtn');
       if (clearBtn) {
         clearBtn.classList.remove('hidden');
+      }
+
+      const searchContainer = document.getElementById('searchContainer');
+      const navigationPanel = document.getElementById('navigationPanel');
+      if (searchContainer) searchContainer.classList.add('hidden');
+      if (navigationPanel) {
+        navigationPanel.classList.remove('hidden');
+        document.getElementById('navInstructionText').textContent = "Calcul de l'itinéraire...";
+        document.getElementById('navInstructionSub').textContent = "Veuillez patienter...";
       }
 
       // Close open popups
@@ -238,6 +262,54 @@ const PharmacyMap = {
       console.error("Routing error:", err);
       throw new Error("Erreur lors du calcul de l'itinéraire. Vérifiez votre connexion internet.");
     }
+  },
+
+  /**
+   * Update visual navigation assistant UI with current step directions
+   */
+  updateNavigationUI() {
+    if (this.currentRouteInstructions.length === 0) return;
+
+    const step = this.currentRouteInstructions[this.currentRouteStep];
+    const iconName = this.getDirectionIcon(step.type || step.modifier);
+    
+    const directionIcon = document.getElementById('navDirectionIcon');
+    const instructionText = document.getElementById('navInstructionText');
+    const instructionSub = document.getElementById('navInstructionSub');
+    const prevBtn = document.getElementById('navPrevBtn');
+    const nextBtn = document.getElementById('navNextBtn');
+
+    if (directionIcon) directionIcon.textContent = iconName;
+    if (instructionText) instructionText.textContent = step.text;
+    
+    if (instructionSub) {
+      const distanceText = Utils.formatDistance(step.distance);
+      instructionSub.textContent = `Étape ${this.currentRouteStep + 1} sur ${this.currentRouteInstructions.length} • dans ${distanceText}`;
+    }
+    
+    if (prevBtn) prevBtn.disabled = this.currentRouteStep === 0;
+    if (nextBtn) nextBtn.disabled = this.currentRouteStep === this.currentRouteInstructions.length - 1;
+
+    // Pan map to coordinate of the current step
+    const coordIndex = step.index;
+    if (this.currentRouteCoordinates && this.currentRouteCoordinates[coordIndex]) {
+      const coord = this.currentRouteCoordinates[coordIndex];
+      this.map.panTo(coord);
+    }
+  },
+
+  /**
+   * Map turn type modifier to visual Material Icon name
+   */
+  getDirectionIcon(type) {
+    const t = type ? type.toLowerCase() : '';
+    if (t.includes('left')) return 'turn_left';
+    if (t.includes('right')) return 'turn_right';
+    if (t.includes('straight')) return 'straight';
+    if (t.includes('u-turn') || t.includes('turnaround')) return 'u_turn_left';
+    if (t.includes('roundabout') || t.includes('rotary')) return 'roundabout_right';
+    if (t.includes('destination') || t.includes('arrive')) return 'place';
+    return 'navigation';
   },
 
   /**
@@ -252,10 +324,22 @@ const PharmacyMap = {
       }
       this.routingControl = null;
     }
+    
+    // Clear navigation properties
+    this.currentRouteInstructions = [];
+    this.currentRouteCoordinates = [];
+    this.currentRouteStep = 0;
+
+    // Toggle navigation/search UI panels
     const clearBtn = document.getElementById('clearRouteBtn');
     if (clearBtn) {
       clearBtn.classList.add('hidden');
     }
+
+    const searchContainer = document.getElementById('searchContainer');
+    const navigationPanel = document.getElementById('navigationPanel');
+    if (searchContainer) searchContainer.classList.remove('hidden');
+    if (navigationPanel) navigationPanel.classList.add('hidden');
   },
 
   /* ---------- Selection ---------- */
