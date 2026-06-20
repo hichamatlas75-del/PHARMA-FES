@@ -1247,65 +1247,7 @@ body.map-view-active .bottom-sheet {
   }
 }
 
-/* ---------- Responsive: Desktop (>768px) ---------- */
-@media (min-width: 769px) {
-  .bottom-sheet {
-    width: 100% !important;
-    max-width: 680px;
-    height: calc(100vh - 140px) !important;
-    border-radius: 0;
-    left: 50% !important;
-    right: auto;
-    top: 140px;
-    bottom: 0;
-    transform: translateX(-50%) !important;
-    box-shadow: none;
-    border-left: 1px solid var(--border);
-    border-right: 1px solid var(--border);
-  }
 
-  .bottom-sheet-handle {
-    display: none;
-  }
-
-  .bottom-sheet-header {
-    padding: 80px 20px 12px;
-  }
-
-  .bottom-sheet-content {
-    max-height: calc(100vh - 140px);
-  }
-
-  .fab-container {
-    right: 24px;
-    bottom: 32px;
-  }
-
-  .detail-modal {
-    align-items: center;
-  }
-
-  .detail-modal-content {
-    max-width: 480px;
-    border-radius: 24px;
-    max-height: 80vh;
-    margin: 0 auto;
-  }
-
-  .search-container {
-    max-width: 680px !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    padding: 0 16px;
-  }
-}
-
-/* ---------- Responsive: Large Desktop (>1024px) ---------- */
-@media (min-width: 1025px) {
-  .fab-container {
-    right: 32px;
-  }
-}
 
 /* ---------- Print ---------- */
 @media print {
