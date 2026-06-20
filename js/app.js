@@ -986,7 +986,6 @@ const App = {
       if (signature === this.lastGardeSignature) {
         return;
       }
-      const isFirstLoad = this.lastGardeSignature === null;
       this.lastGardeSignature = signature;
 
       console.log(`Successfully loaded ${parsedRealGuards.length} real-time on-duty pharmacies:`, parsedRealGuards);
