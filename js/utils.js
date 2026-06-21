@@ -125,19 +125,8 @@ const Utils = {
     const gardeInfo = PharmacyData.isDeGarde(pharmacy.id, now);
 
     if (gardeInfo.isGarde) {
-      const hours = now.getHours();
-      const isNight = hours >= 20 || hours < 8; // Night guard hours: 20:00 to 08:00
-      
-      if (gardeInfo.type === 'nuit') {
-        // Garde de nuit uniquement : hors plage nocturne, la pharmacie
-        // suit son fonctionnement normal (elle n'est pas fermée pour autant).
-        return isNight ? 'garde-nuit' : (this.isOpen(pharmacy) ? 'open' : 'closed');
-      } else if (gardeInfo.type === 'jour') {
-        // Garde de jour uniquement : hors plage diurne, idem.
-        return isNight ? (this.isOpen(pharmacy) ? 'open' : 'closed') : 'garde-jour';
-      } else { // 'jour-nuit' or default
-        return isNight ? 'garde-nuit' : 'garde-jour';
-      }
+      // Le système de garde est de 24h : la pharmacie reste de garde en continu
+      return 'garde-jour';
     }
 
     return this.isOpen(pharmacy) ? 'open' : 'closed';
@@ -152,8 +141,8 @@ const Utils = {
     const labels = {
       'open': 'Ouvert',
       'closed': 'Fermé',
-      'garde-jour': 'De garde (jour)',
-      'garde-nuit': 'De garde (nuit)'
+      'garde-jour': 'De garde',
+      'garde-nuit': 'De garde'
     };
     return labels[status] || 'Inconnu';
   },

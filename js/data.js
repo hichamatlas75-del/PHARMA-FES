@@ -157,8 +157,8 @@ const PharmacyData = {
       "address": "commune ain chkef",
       "quartier": "Ain Chkef",
       "phone": "0535962645",
-      "lat": 33.9918935,
-      "lng": -5.0656429,
+      "lat": 33.9976267,
+      "lng": -5.011974,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -255,8 +255,8 @@ const PharmacyData = {
       "address": "bd ismailia. pres de l'arrondissement saiss",
       "quartier": "Saiss",
       "phone": "05356445950660420527",
-      "lat": 34.0134556,
-      "lng": -4.9980555,
+      "lat": 34.0074565,
+      "lng": -4.9804051,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -787,8 +787,8 @@ const PharmacyData = {
       "address": "bd mouahidine dekkarat, hay az allah",
       "quartier": "Agdal",
       "phone": "0535621919",
-      "lat": 34.0427102,
-      "lng": -5.0123896,
+      "lat": 34.0389082,
+      "lng": -5.0329072,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -843,8 +843,8 @@ const PharmacyData = {
       "address": "bloc a5 numéro 2, 3 nassim bensouda. près du mosquée bensouda",
       "quartier": "Zouagha",
       "phone": "0535655571",
-      "lat": 34.031069,
-      "lng": -4.9976328,
+      "lat": 34.0125609,
+      "lng": -5.059247,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -1179,8 +1179,8 @@ const PharmacyData = {
       "address": "route d'immouzer a coté du super marché ahlan",
       "quartier": "Agdal",
       "phone": "0535640784",
-      "lat": 34.0246591,
-      "lng": -5.0111532,
+      "lat": 34.0260606,
+      "lng": -4.9976251,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -1235,8 +1235,8 @@ const PharmacyData = {
       "address": "numero 24 lot. alalej bensouda. face charité tajmouaati et l'usine sayss du lait",
       "quartier": "Zouagha",
       "phone": "0535729153",
-      "lat": 34.0226326,
-      "lng": -5.0220783,
+      "lat": 34.0215063,
+      "lng": -5.0490094,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -1249,8 +1249,8 @@ const PharmacyData = {
       "address": "n°7. rue jordanie, ex-damas. hay la gare- a coté de l'institut quortoba et la salle du sport zgoud",
       "quartier": "Agdal",
       "phone": "0535621300",
-      "lat": 34.0584305,
-      "lng": -4.9795562,
+      "lat": 34.0451989,
+      "lng": -5.0029903,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -1487,8 +1487,8 @@ const PharmacyData = {
       "address": "numéro 25 bab guissa a cote du palais jamaai",
       "quartier": "Medina Jnanat",
       "phone": "0535635584",
-      "lat": 34.0327272,
-      "lng": -5.0849665,
+      "lat": 34.068623,
+      "lng": -4.9757032,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -1585,8 +1585,8 @@ const PharmacyData = {
       "address": "206 bd rabia hay hassani 3 route ain chkef",
       "quartier": "Agdal",
       "phone": "0535612184",
-      "lat": 34.0103,
-      "lng": -5.00578,
+      "lat": 34.0172451,
+      "lng": -5.0147536,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -2159,8 +2159,8 @@ const PharmacyData = {
       "address": "3, résid. el mahmi, bd mohamed 6. zougha haute",
       "quartier": "Zouagha",
       "phone": "0535600860",
-      "lat": 34.0199873,
-      "lng": -5.0479124,
+      "lat": 34.0232632,
+      "lng": -5.0287799,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -2215,8 +2215,8 @@ const PharmacyData = {
       "address": "boulevard mohamed slaoui. a coté du clinique slayki",
       "quartier": "Agdal",
       "phone": "0535626468",
-      "lat": 34.0106557,
-      "lng": -4.9657329,
+      "lat": 34.0392486,
+      "lng": -4.9936096,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -2649,8 +2649,8 @@ const PharmacyData = {
       "address": "rue 3 n° 2 hay tarik 1. près des écoles amin. face fin du bus n°40",
       "quartier": "Agdal",
       "phone": "0535611029",
-      "lat": 34.0356032,
-      "lng": -5.0420916,
+      "lat": 34.0356746,
+      "lng": -5.0245247,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -2845,8 +2845,8 @@ const PharmacyData = {
       "address": "narjis d, hay al amal, route sidi harazem. face faculté de medecine",
       "quartier": "Saiss",
       "phone": "0535619508",
-      "lat": 34.011346,
-      "lng": -4.9833986,
+      "lat": 34.0076423,
+      "lng": -4.9652236,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -2943,8 +2943,8 @@ const PharmacyData = {
       "address": "pharmacie fatima zahra, 2 lot. tourya anas 3 a coté clinique arrazi",
       "quartier": "Agdal",
       "phone": "0535604521",
-      "lat": 34.0339199,
-      "lng": -5.0352624,
+      "lat": 34.0326552,
+      "lng": -5.0088613,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -2971,8 +2971,8 @@ const PharmacyData = {
       "address": "n° 212 lot alhawaa el jamil. 200m de la faculté du médecine, route sidi hrazem",
       "quartier": "Saiss",
       "phone": "0535619528",
-      "lat": 34.0332598,
-      "lng": -5.0090152,
+      "lat": 34.0093643,
+      "lng": -4.9616705,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -3391,8 +3391,8 @@ const PharmacyData = {
       "address": "lot. bab elghoul a5 dher elmahraz, proche de l'hopital el ghassani",
       "quartier": "Agdal",
       "phone": "0613917179",
-      "lat": 34.0450212,
-      "lng": -4.9888894,
+      "lat": 34.02745,
+      "lng": -5.024345,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -3713,8 +3713,8 @@ const PharmacyData = {
       "address": "n°132 lotissement farah. 800m du l'usine butagaz. bensouda .el massira",
       "quartier": "Zouagha",
       "phone": "0535727195",
-      "lat": 33.9949684,
-      "lng": -5.062413,
+      "lat": 34.0037878,
+      "lng": -5.0446424,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -3839,8 +3839,8 @@ const PharmacyData = {
       "address": "numéro 15 lot firdaws hay adarissa a cote de mosquée al baraka a cote de ista",
       "quartier": "Agdal",
       "phone": "0535748766",
-      "lat": 34.0332554,
-      "lng": -5.0021058,
+      "lat": 34.0183147,
+      "lng": -5.0141634,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -4105,8 +4105,8 @@ const PharmacyData = {
       "address": "bd hassan 2 en face du tribunal cour d'appel",
       "quartier": "Agdal",
       "phone": "0535621284",
-      "lat": 34.0312256,
-      "lng": -5.0083188,
+      "lat": 34.0394593,
+      "lng": -5.0015078,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -4371,8 +4371,8 @@ const PharmacyData = {
       "address": "",
       "quartier": "Fes",
       "phone": "0535640172",
-      "lat": 34.0718486,
-      "lng": -4.96295,
+      "lat": 34.0309569,
+      "lng": -4.9981453,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -4427,8 +4427,8 @@ const PharmacyData = {
       "address": "n°5 lot badr, route ain smen residence badr, bd abderrahim sekkat hay badr",
       "quartier": "Agdal",
       "phone": "0535962931",
-      "lat": 34.0234068,
-      "lng": -5.0207651,
+      "lat": 34.0421156,
+      "lng": -5.001262,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -4469,8 +4469,8 @@ const PharmacyData = {
       "address": "avenue iskandaria. rue managua. n°21 mont fleuri 2. a coté de la mosquée abi wakkas et terminus du bus23 jaune",
       "quartier": "Saiss",
       "phone": "0535615492",
-      "lat": 34.0057858,
-      "lng": -4.9834357,
+      "lat": 34.0164884,
+      "lng": -4.9900381,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -4693,8 +4693,8 @@ const PharmacyData = {
       "address": "numéro 2, 3 rue 01 route ain smen lotissement anbara",
       "quartier": "Zouagha",
       "phone": "0535605327",
-      "lat": 34.021083,
-      "lng": -5.0709666,
+      "lat": 34.0144488,
+      "lng": -5.0362829,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -5113,8 +5113,8 @@ const PharmacyData = {
       "address": "route d'imouzzer, a coté restaurant al ambra et al andalous",
       "quartier": "Agdal",
       "phone": "0535657059",
-      "lat": 34.0086636,
-      "lng": -4.993274,
+      "lat": 34.0309569,
+      "lng": -4.9981453,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -5141,8 +5141,8 @@ const PharmacyData = {
       "address": "hay dokkarat lotiss. karim amrani rue 1 n°13",
       "quartier": "Agdal",
       "phone": "0535944857",
-      "lat": 34.0093643,
-      "lng": -4.9616705,
+      "lat": 34.0395245,
+      "lng": -5.0272749,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -5267,8 +5267,8 @@ const PharmacyData = {
       "address": "rue l'hopital n°13. bloc pam. 1545 hay al wahda. ben souda",
       "quartier": "Saiss",
       "phone": "0610242608",
-      "lat": 33.9958247,
-      "lng": -4.9998303,
+      "lat": 34.006501,
+      "lng": -5.047265,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -5449,8 +5449,8 @@ const PharmacyData = {
       "address": "drouj malakia bab ftouh",
       "quartier": "Medina Jnanat",
       "phone": "0535649500",
-      "lat": 34.0547321,
-      "lng": -4.9522984,
+      "lat": 34.0605946,
+      "lng": -4.9688505,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -5715,8 +5715,8 @@ const PharmacyData = {
       "address": "hay tarik1. près palais royale. a coté de bmce",
       "quartier": "Agdal",
       "phone": "0535612221",
-      "lat": 34.0412166,
-      "lng": -5.0275184,
+      "lat": 34.029135,
+      "lng": -5.0265075,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -5799,8 +5799,8 @@ const PharmacyData = {
       "address": "384 lot aziza, magasin 1, route ain chkef",
       "quartier": "Zouagha",
       "phone": "0532075708",
-      "lat": 33.9954784,
-      "lng": -5.0350051,
+      "lat": 34.0097586,
+      "lng": -5.0278287,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -5813,8 +5813,8 @@ const PharmacyData = {
       "address": "pharmacie yasmine, n°346 bd d'oran montfleuri 1 pres arrondissement zohour",
       "quartier": "Saiss",
       "phone": "0535619643",
-      "lat": 34.0694789,
-      "lng": -5.0135871,
+      "lat": 34.0102284,
+      "lng": -4.9880887,
       "hours": {
         "open": "08:30",
         "close": "20:30"
@@ -6051,8 +6051,8 @@ const PharmacyData = {
       "address": "route ras lma. km3. zouagha",
       "quartier": "Zouagha",
       "phone": "0535601475",
-      "lat": 34.006501,
-      "lng": -5.047265,
+      "lat": 34.0277814,
+      "lng": -5.0462297,
       "hours": {
         "open": "08:30",
         "close": "20:30"
