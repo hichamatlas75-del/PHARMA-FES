@@ -970,6 +970,7 @@ const App = {
    * Fetch real-time on-duty pharmacies from the web
    */
   async fetchRealDeGarde() {
+    let apiUrl = '';
     try {
       console.log("Fetching real-time on-duty pharmacies from proxy API...");
       
@@ -982,7 +983,7 @@ const App = {
                            window.location.hostname === 'appassets.androidplatform.net' ||
                            window.location.hostname === 'localhost' ||
                            window.location.hostname === '127.0.0.1';
-      const apiUrl = useRemoteApi 
+      apiUrl = useRemoteApi 
         ? 'https://pharma-fes.pages.dev/api/garde' 
         : '/api/garde';
 
@@ -1026,7 +1027,7 @@ const App = {
          pas à chaque poll de 60s */
       if (!this.gardeFetchFailed) {
         this.gardeFetchFailed = true;
-        this.showToast("Impossible de charger les gardes en temps réel", "error");
+        this.showToast(`Échec : ${err.message || err} (URL: ${apiUrl})`, "error");
       }
       // If first load failed, we should still refresh the list to remove the skeleton loading screen
       if (this.lastGardeSignature === null) {
