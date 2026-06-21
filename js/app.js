@@ -978,8 +978,11 @@ const App = {
         this.showLoadingSkeleton();
       }
 
-      const isLocalFile = window.location.protocol === 'file:';
-      const apiUrl = isLocalFile 
+      const useRemoteApi = window.location.protocol === 'file:' || 
+                           window.location.hostname === 'appassets.androidplatform.net' ||
+                           window.location.hostname === 'localhost' ||
+                           window.location.hostname === '127.0.0.1';
+      const apiUrl = useRemoteApi 
         ? 'https://pharma-fes.pages.dev/api/garde' 
         : '/api/garde';
 
