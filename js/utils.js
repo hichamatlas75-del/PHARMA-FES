@@ -102,6 +102,7 @@ const Utils = {
    */
   isOpen(pharmacy) {
     if (pharmacy.isH24) return true;
+    if (!pharmacy.hours || !pharmacy.hours.open || !pharmacy.hours.close) return false;
 
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -111,6 +112,11 @@ const Utils = {
 
     const openMinutes = openH * 60 + openM;
     const closeMinutes = closeH * 60 + closeM;
+
+    // Handle overnight hours (e.g., 20:00 - 08:00)
+    if (closeMinutes < openMinutes) {
+      return currentMinutes >= openMinutes || currentMinutes <= closeMinutes;
+    }
 
     return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
   },
@@ -219,7 +225,9 @@ const Utils = {
       App.showToast('Numéro de téléphone non disponible', 'error');
       return;
     }
-    window.location.href = `tel:${phone}`;
+    // Sanitize phone number to prevent tel: protocol injection
+    const safePhone = phone.replace(/[^0-9+\-\s]/g, '');
+    window.location.href = `tel:${safePhone}`;
   },
 
   /**
@@ -285,9 +293,10 @@ const Utils = {
    * @returns {number} Day of year (1-366)
    */
   getDayOfYear(date) {
-    const start = new Date(date.getFullYear(), 0, 0);
-    const diff = date - start;
-    return Math.floor(diff / 86400000);
+    // Use UTC to avoid DST issues (23h or 25h days)
+    const start = Date.UTC(date.getFullYear(), 0, 1);
+    const now = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+    return Math.floor((now - start) / 86400000) + 1;
   },
 
   /**
@@ -297,8 +306,11 @@ const Utils = {
    */
   escapeHtml(str) {
     if (!str) return '';
-    const div = document.createElement('div');
-    div.appendChild(document.createTextNode(str));
-    return div.innerHTML;
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 };

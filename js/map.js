@@ -271,7 +271,7 @@ const PharmacyMap = {
     if (this.currentRouteInstructions.length === 0) return;
 
     const step = this.currentRouteInstructions[this.currentRouteStep];
-    const iconName = this.getDirectionIcon(step.type || step.modifier);
+    const iconName = this.getDirectionIcon(step.modifier || step.type);
     
     const directionIcon = document.getElementById('navDirectionIcon');
     const instructionText = document.getElementById('navInstructionText');
@@ -280,7 +280,7 @@ const PharmacyMap = {
     const nextBtn = document.getElementById('navNextBtn');
 
     if (directionIcon) directionIcon.textContent = iconName;
-    if (instructionText) instructionText.textContent = step.text;
+    if (instructionText) instructionText.textContent = step.text || step.road || 'Continuez';
     
     if (instructionSub) {
       const distanceText = Utils.formatDistance(step.distance);

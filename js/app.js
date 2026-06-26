@@ -1015,7 +1015,8 @@ const App = {
       this.updateTabCounts();
 
       const allPharmacies = PharmacyData.getAll();
-      PharmacyMap.addMarkers(allPharmacies);
+      // Use incremental marker update instead of recreating all 433+ markers
+      PharmacyMap.refreshMarkerIcons();
       this.applyFilter(this.currentFilter);
 
       if (isFirstLoad) {
@@ -1027,7 +1028,7 @@ const App = {
          pas à chaque poll de 60s */
       if (!this.gardeFetchFailed) {
         this.gardeFetchFailed = true;
-        this.showToast(`Échec : ${err.message || err} (URL: ${apiUrl})`, "error");
+        this.showToast(`Erreur de chargement des pharmacies de garde`, "error");
       }
       // If first load failed, we should still refresh the list to remove the skeleton loading screen
       if (this.lastGardeSignature === null) {

@@ -142,11 +142,27 @@ export async function onRequestGet(context) {
       // Normalize phone number
       const phone = item.tel ? item.tel.replace(/\s+/g, '') : '';
 
+      const lat = item.latitude ? parseFloat(item.latitude) : 0;
+      const lng = item.longitude ? parseFloat(item.longitude) : 0;
+
+      // Skip pharmacies with invalid coordinates (NaN from malformed data)
+      if (isNaN(lat) || isNaN(lng)) {
+        console.warn(`Skipping pharmacy with invalid coordinates: ${cleanName}`);
+        parsedRealGuards.push({
+          name: cleanName,
+          phone: phone,
+          lat: 0,
+          lng: 0,
+          guardType: guardType
+        });
+        continue;
+      }
+
       parsedRealGuards.push({
         name: cleanName,
         phone: phone,
-        lat: item.latitude ? parseFloat(item.latitude) : 0,
-        lng: item.longitude ? parseFloat(item.longitude) : 0,
+        lat: lat,
+        lng: lng,
         guardType: guardType
       });
     });
@@ -155,7 +171,7 @@ export async function onRequestGet(context) {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'public, s-maxage=600'
+        'Cache-Control': 'public, max-age=300, s-maxage=600'
       }
     });
 

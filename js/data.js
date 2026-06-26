@@ -6111,6 +6111,9 @@ const PharmacyData = {
         }
 
         if (match.lat && match.lng && !isPlaceholder(match.lat, match.lng)) {
+          // Save original coordinates before overwriting
+          if (!p._originalLat) p._originalLat = p.lat;
+          if (!p._originalLng) p._originalLng = p.lng;
           p.lat = match.lat;
           p.lng = match.lng;
         }
@@ -6146,25 +6149,48 @@ const PharmacyData = {
     });
   },
 
-  _findMatchingReal(localPharma, listOfReal) {
-    // 1. Match by phone number (require at least 9 matching digits)
-    const localPhone = localPharma.phone ? localPharma.phone.replace(/[^0-9]/g, '') : '';
-    if (localPhone && localPhone.length >= 9) {
-      const match = listOfReal.find(r => {
-        const realPhone = r.phone ? r.phone.replace(/[^0-9]/g, '') : '';
-        if (!realPhone || realPhone.length < 9) return false;
-        return realPhone === localPhone || realPhone.endsWith(localPhone) || localPhone.endsWith(realPhone);
-      });
-      if (match) return match;
+  _findMatchingReal(localPharmacy, realList) {
+    const normLocal = this._normalizeName(localPharmacy.name);
+    const localPhone = (localPharmacy.phone || '').replace(/\s+/g, '');
+    const localWords = normLocal.split(/\s+/).filter(w => w.length > 2);
+
+    let bestMatch = null;
+    let bestScore = 0;
+
+    for (const real of realList) {
+      const normReal = this._normalizeName(real.name);
+      const realPhone = (real.phone || '').replace(/\s+/g, '');
+      const realWords = normReal.split(/\s+/).filter(w => w.length > 2);
+
+      let score = 0;
+
+      // Phone match (compare last 8 digits for reliability)
+      if (localPhone.length >= 8 && realPhone.length >= 8) {
+        const localSuffix = localPhone.slice(-8);
+        const realSuffix = realPhone.slice(-8);
+        if (localSuffix === realSuffix) {
+          score += 50;
+        }
+      }
+
+      // Name word matching
+      const matchingWords = localWords.filter(w => realWords.includes(w));
+      if (matchingWords.length >= 2) {
+        score += matchingWords.length * 10;
+      }
+
+      // Exact name match bonus
+      if (normLocal === normReal) {
+        score += 100;
+      }
+
+      if (score > bestScore && score >= 20) {
+        bestScore = score;
+        bestMatch = real;
+      }
     }
 
-    // 2. Match by normalized name
-    const normLocal = this._normalizeName(localPharma.name);
-    const match = listOfReal.find(r => {
-      const normReal = this._normalizeName(r.name);
-      return normLocal === normReal || normLocal.includes(normReal) || normReal.includes(normLocal);
-    });
-    return match;
+    return bestMatch;
   },
 
   _normalizeName(name) {
@@ -6172,7 +6198,9 @@ const PharmacyData = {
     let s = this._removeAccents(name.toLowerCase());
     s = s.replace(/\bpharmacie\b/gi, "")
          .replace(/\bpharma\b/gi, "")
-         .replace(/[^a-z0-9]/g, "");
+         .replace(/[^a-z0-9\s]/g, "")
+         .replace(/\s+/g, ' ')
+         .trim();
     return s;
   },
 
@@ -6213,7 +6241,7 @@ const PharmacyData = {
 
   /**
    * Get pharmacies "de garde" for a given date
-   * @param {Date} date - Target date
+   * @param {Date} date - Target date (currently unused — guard list is set via setRealDeGarde)
    * @returns {{ jour: Array, nuit: Array }} Day and night guard pharmacies
    */
   getDeGarde(date) {

@@ -33,6 +33,19 @@
   box-sizing: border-box;
 }
 
+/* ---------- Utility Classes ---------- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
@@ -44,6 +57,7 @@ body {
   background: var(--bg);
   overflow: hidden;
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -308,7 +322,7 @@ img {
 
 body.map-view-active #map {
   opacity: 1;
-  pointer-events: all;
+  pointer-events: auto;
   z-index: 12;
 }
 
@@ -607,7 +621,7 @@ body.map-view-active .bottom-sheet {
 
 .pharmacy-status.closed {
   background: #fee2e2;
-  color: #ef4444;
+  color: #dc2626;
 }
 
 .pharmacy-card-address {
@@ -698,7 +712,7 @@ body.map-view-active .bottom-sheet {
 
 .detail-modal.active {
   opacity: 1;
-  pointer-events: all;
+  pointer-events: auto;
 }
 
 .detail-modal-content {
@@ -1423,7 +1437,7 @@ body.map-view-active #fabMyLocation {
 
 body.map-view-active .back-to-list-btn {
   opacity: 1;
-  pointer-events: all;
+  pointer-events: auto;
   transform: translateY(0);
 }
 
@@ -1565,19 +1579,19 @@ body.map-view-active .back-to-list-btn {
 
   /* Bottom sheet & detail panel */
   .bottom-sheet,
-  .detail-panel {
+  .detail-modal-content {
     background: var(--surface);
     border-color: var(--border);
   }
 
   /* Search input */
-  .search-input {
+  .search-bar input {
     background: var(--bg);
     color: var(--text);
     border-color: var(--border);
   }
 
-  .search-input::placeholder {
+  .search-bar input::placeholder {
     color: var(--text-light);
   }
 
@@ -1591,7 +1605,7 @@ body.map-view-active .back-to-list-btn {
   }
 
   /* Header */
-  .header {
+  .app-header {
     background: var(--surface);
     border-color: var(--border);
   }
@@ -1710,10 +1724,10 @@ html {
   gap: 16px;
   z-index: 1100;
   border: 1px solid var(--border);
-  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideDownNav 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@keyframes slideDown {
+@keyframes slideDownNav {
   from { transform: translateY(-20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
@@ -1759,8 +1773,8 @@ html {
 }
 
 .nav-control-btn {
-  width: 36px;
-  height: 36px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 50%;
   border: 1px solid var(--border);
   background: var(--surface);
