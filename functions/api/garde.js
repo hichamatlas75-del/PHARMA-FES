@@ -155,7 +155,7 @@ export async function onRequestGet(context) {
           lng: 0,
           guardType: guardType
         });
-        continue;
+        return;
       }
 
       parsedRealGuards.push({
