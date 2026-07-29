@@ -312,5 +312,52 @@ const Utils = {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  },
+
+  /**
+   * Calculate estimated driving and walking travel time
+   * @param {number} meters - Distance in meters
+   * @returns {{ drivingMin: number, walkingMin: number, formatted: string }}
+   */
+  calculateTravelTime(meters) {
+    if (isNaN(meters) || meters < 0) {
+      return { drivingMin: 0, walkingMin: 0, formatted: '' };
+    }
+    const drivingMin = Math.max(1, Math.round(meters / 500)); // ~30 km/h urban
+    const walkingMin = Math.max(1, Math.round(meters / 75));  // ~4.5 km/h walking
+    const formatted = `🚗 ~${drivingMin} min • 🚶 ~${walkingMin} min`;
+    return { drivingMin, walkingMin, formatted };
+  },
+
+  /**
+   * Share pharmacy information directly via WhatsApp
+   * @param {Object} pharmacy - Pharmacy object
+   */
+  shareWhatsApp(pharmacy) {
+    if (!pharmacy) return;
+    const status = this.getStatus(pharmacy);
+    const statusLabel = this.getStatusLabel(status);
+    const text = `🏥 *${pharmacy.name}*\n📍 Adresse: ${pharmacy.address}, ${pharmacy.quartier}\n🕐 Statut: ${statusLabel}\n${pharmacy.phone ? '📞 Tél: ' + pharmacy.phone + '\n' : ''}📌 Carte: https://www.google.com/maps?q=${pharmacy.lat},${pharmacy.lng}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  },
+
+  /**
+   * Safely highlight search term matches in text
+   * @param {string} text - Source text
+   * @param {string} query - Search query
+   * @returns {string} Escaped HTML string with highlighted matches
+   */
+  highlightMatch(text, query) {
+    if (!text) return '';
+    const safeText = this.escapeHtml(text);
+    if (!query || !query.trim()) return safeText;
+
+    const trimmed = query.trim();
+    // Escape regex special characters
+    const escapedQuery = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedQuery})`, 'gi');
+
+    return safeText.replace(regex, '<mark class="search-highlight">$1</mark>');
   }
 };

@@ -1834,3 +1834,88 @@ html {
     transform: translateX(-50%);
   }
 }
+
+/* ---------- Offline Banner ---------- */
+.offline-banner {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  z-index: 1001;
+  background: #fef2f2;
+  color: #991b1b;
+  border-bottom: 1px solid #fecaca;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.offline-banner.hidden {
+  display: none !important;
+}
+
+/* ---------- Search Highlight ---------- */
+mark.search-highlight {
+  background-color: #fef08a;
+  color: #854d0e;
+  font-weight: 600;
+  padding: 0 2px;
+  border-radius: 3px;
+}
+
+/* ---------- WhatsApp Action Button ---------- */
+.detail-action-btn.whatsapp {
+  background: #25D366;
+  color: #ffffff;
+}
+
+.detail-action-btn.whatsapp:hover {
+  background: #1da851;
+  transform: translateY(-1px);
+}
+
+.pharmacy-card-action.whatsapp {
+  background: rgba(37, 211, 102, 0.1);
+  color: #128C7E;
+}
+
+.pharmacy-card-action.whatsapp:hover {
+  background: rgba(37, 211, 102, 0.2);
+}
+
+/* ---------- Travel Time Indicator ---------- */
+.pharmacy-travel-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--primary-dark);
+  background: var(--primary-bg);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  margin-top: 4px;
+}
+
+/* ---------- Leaflet MarkerCluster Styling ---------- */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background-color: rgba(22, 163, 74, 0.25) !important;
+}
+
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+  background-color: #16a34a !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-family: 'Inter', sans-serif !important;
+  box-shadow: 0 3px 10px rgba(22, 163, 74, 0.4) !important;
+}

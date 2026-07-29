@@ -226,9 +226,31 @@ const App = {
     document.getElementById('detailMapsBtn').addEventListener('click', () => {
       if (this.currentPharmacy) Utils.openInMaps(this.currentPharmacy.lat, this.currentPharmacy.lng, this.currentPharmacy.name);
     });
+    document.getElementById('detailWhatsappBtn').addEventListener('click', () => {
+      if (this.currentPharmacy) Utils.shareWhatsApp(this.currentPharmacy);
+    });
     document.getElementById('detailShareBtn').addEventListener('click', () => {
       if (this.currentPharmacy) Utils.sharePharmacy(this.currentPharmacy);
     });
+
+    /* --- Offline Banner Listeners --- */
+    const offlineBanner = document.getElementById('offlineBanner');
+    const updateOfflineStatus = () => {
+      if (offlineBanner) {
+        if (navigator.onLine) {
+          offlineBanner.classList.add('hidden');
+        } else {
+          offlineBanner.classList.remove('hidden');
+          this.showToast('Mode hors-ligne activé', 'warning');
+        }
+      }
+    };
+    window.addEventListener('online', () => {
+      if (offlineBanner) offlineBanner.classList.add('hidden');
+      this.showToast('Connexion rétablie', 'success');
+    });
+    window.addEventListener('offline', updateOfflineStatus);
+    if (!navigator.onLine) updateOfflineStatus();
 
     /* --- Navigation Panel Steps --- */
     const prevBtn = document.getElementById('navPrevBtn');
@@ -284,6 +306,9 @@ const App = {
         switch (action) {
           case 'call':
             Utils.callPhone(pharmacy.phone);
+            break;
+          case 'whatsapp':
+            Utils.shareWhatsApp(pharmacy);
             break;
           case 'directions':
             this.showToast("Calcul de l'itinéraire...", "info");
@@ -357,14 +382,25 @@ const App = {
     results.forEach(pharmacy => {
       const status = Utils.getStatus(pharmacy);
       const statusClass = Utils.getStatusClass(status);
+      const highlightedName = Utils.highlightMatch(pharmacy.name, query);
+      const highlightedAddress = Utils.highlightMatch(pharmacy.address, query);
+      const highlightedQuartier = Utils.highlightMatch(pharmacy.quartier, query);
+
+      let travelTimeHtml = '';
+      if (pharmacy.distance !== undefined) {
+        const travel = Utils.calculateTravelTime(pharmacy.distance);
+        travelTimeHtml = `<span class="pharmacy-travel-time" style="font-size:0.65rem;margin-top:2px;">${travel.formatted}</span>`;
+      }
+
       html += `
         <div class="search-result-item" data-id="${pharmacy.id}">
           <div class="search-result-icon">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
           </div>
           <div class="search-result-text">
-            <div class="search-result-name">${Utils.escapeHtml(pharmacy.name)}</div>
-            <div class="search-result-address">${Utils.escapeHtml(pharmacy.address)} — ${Utils.escapeHtml(pharmacy.quartier)}</div>
+            <div class="search-result-name">${highlightedName}</div>
+            <div class="search-result-address">${highlightedAddress} — ${highlightedQuartier}</div>
+            ${travelTimeHtml}
           </div>
           <span class="pharmacy-status ${statusClass}" style="font-size:0.65rem;padding:2px 8px;">${Utils.getStatusLabel(status)}</span>
         </div>
@@ -716,20 +752,21 @@ const App = {
     const statusClass = Utils.getStatusClass(status);
 
     let distanceHtml = '';
-    if (pharmacy.distance !== undefined) {
+    let meters = pharmacy.distance;
+    if (meters === undefined && PharmacyMap.userLat !== null) {
+      meters = Utils.haversineDistance(PharmacyMap.userLat, PharmacyMap.userLng, pharmacy.lat, pharmacy.lng);
+    }
+
+    if (meters !== undefined) {
+      const travel = Utils.calculateTravelTime(meters);
       distanceHtml = `
-        <span class="pharmacy-card-distance">
-          <span class="material-icons-round">straighten</span>
-          ${Utils.formatDistance(pharmacy.distance)}
-        </span>
-      `;
-    } else if (PharmacyMap.userLat !== null) {
-      const dist = Utils.haversineDistance(PharmacyMap.userLat, PharmacyMap.userLng, pharmacy.lat, pharmacy.lng);
-      distanceHtml = `
-        <span class="pharmacy-card-distance">
-          <span class="material-icons-round">straighten</span>
-          ${Utils.formatDistance(dist)}
-        </span>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span class="pharmacy-card-distance">
+            <span class="material-icons-round">straighten</span>
+            ${Utils.formatDistance(meters)}
+          </span>
+          <span class="pharmacy-travel-time">${travel.formatted}</span>
+        </div>
       `;
     }
 
@@ -738,6 +775,10 @@ const App = {
            <span class="material-icons-round">phone</span>
          </button>`
       : '';
+
+    const whatsappAction = `<button class="pharmacy-card-action whatsapp" data-id="${pharmacy.id}" data-action="whatsapp" aria-label="Partager sur WhatsApp" title="Partager sur WhatsApp">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.84 9.84 0 0 0 12.04 2zm5.8 14.16c-.24.68-1.2 1.24-1.95 1.3-.51.04-1.18.06-3.41-.85-2.85-1.17-4.69-4.08-4.83-4.27-.14-.19-1.16-1.54-1.16-2.94 0-1.4.73-2.09 1-2.37.27-.28.59-.35.79-.35.2 0 .4 0 .57.01.18.01.43-.07.67.51.24.58.83 2.03.9 2.18.07.15.12.33.02.53-.1.19-.15.31-.3.49-.15.17-.31.39-.45.52-.15.14-.3.3-.13.6.17.3.76 1.25 1.64 2.03 1.12.99 2.07 1.3 2.37 1.45.3.15.48.13.65-.07.18-.2.76-.88.96-1.18.2-.3.4-.25.68-.15.28.1.1.77.52 3.86 1.95.09.28.09.53 0 .78-.24.68z"/></svg>
+    </button>`;
 
     const delay = Math.min(index * 0.05, 0.5);
 
@@ -756,6 +797,7 @@ const App = {
           ${distanceHtml}
           <div class="pharmacy-card-actions">
             ${phoneAction}
+            ${whatsappAction}
             <button class="pharmacy-card-action" data-id="${pharmacy.id}" data-action="directions" aria-label="Itinéraire" title="Itinéraire">
               <span class="material-icons-round">directions</span>
             </button>
@@ -828,7 +870,8 @@ const App = {
     const distRow = document.getElementById('detailDistance');
     if (PharmacyMap.userLat !== null) {
       const dist = Utils.haversineDistance(PharmacyMap.userLat, PharmacyMap.userLng, pharmacy.lat, pharmacy.lng);
-      document.getElementById('detailDistanceValue').textContent = Utils.formatDistance(dist);
+      const travel = Utils.calculateTravelTime(dist);
+      document.getElementById('detailDistanceValue').innerHTML = `${Utils.formatDistance(dist)} <span class="pharmacy-travel-time" style="margin-left:6px;">${travel.formatted}</span>`;
       distRow.classList.remove('hidden');
     } else {
       distRow.classList.add('hidden');

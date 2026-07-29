@@ -4,6 +4,7 @@
 
 const PharmacyMap = {
   map: null,
+  markerClusterGroup: null,
   markers: [],
   markerLookup: {},     // id → { marker, pharmacy }
   userMarker: null,
@@ -37,6 +38,17 @@ const PharmacyMap = {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19
     }).addTo(this.map);
+
+    /* Marker Cluster Group initialization */
+    if (typeof L.markerClusterGroup === 'function') {
+      this.markerClusterGroup = L.markerClusterGroup({
+        disableClusteringAtZoom: 17,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        maxClusterRadius: 40
+      });
+      this.map.addLayer(this.markerClusterGroup);
+    }
   },
 
   /* ---------- Markers ---------- */
@@ -48,12 +60,19 @@ const PharmacyMap = {
   addMarkers(pharmacies) {
     this.clearMarkers();
 
+    const clusterArray = [];
+
     pharmacies.forEach(pharmacy => {
       const status = Utils.getStatus(pharmacy);
       const icon = this.createMarkerIcon(status, Utils.hasApproximateLocation(pharmacy));
 
-      const marker = L.marker([pharmacy.lat, pharmacy.lng], { icon })
-        .addTo(this.map);
+      const marker = L.marker([pharmacy.lat, pharmacy.lng], { icon });
+
+      if (!this.markerClusterGroup) {
+        marker.addTo(this.map);
+      } else {
+        clusterArray.push(marker);
+      }
 
       /* Bind popup */
       marker.bindPopup(this.createPopupContent(pharmacy), {
@@ -72,13 +91,21 @@ const PharmacyMap = {
       this.markers.push(entry);
       this.markerLookup[pharmacy.id] = entry;
     });
+
+    if (this.markerClusterGroup && clusterArray.length > 0) {
+      this.markerClusterGroup.addLayers(clusterArray);
+    }
   },
 
   /**
    * Clear all markers from map
    */
   clearMarkers() {
-    this.markers.forEach(({ marker }) => marker.remove());
+    if (this.markerClusterGroup) {
+      this.markerClusterGroup.clearLayers();
+    } else {
+      this.markers.forEach(({ marker }) => marker.remove());
+    }
     this.markers = [];
     this.markerLookup = {};
     this.selectedMarker = null;
@@ -359,25 +386,34 @@ const PharmacyMap = {
 
     // Ensure the marker is visible/added to the map before selecting it
     if (!entry.visible) {
-      entry.marker.addTo(this.map);
+      if (this.markerClusterGroup) {
+        this.markerClusterGroup.addLayer(entry.marker);
+      } else {
+        entry.marker.addTo(this.map);
+      }
       entry.visible = true;
     }
 
     this.selectedId = pharmacy.id;
     this.selectedMarker = entry.marker;
 
-    /* Bounce animation */
-    const el = entry.marker.getElement();
-    if (el) {
-      el.classList.add('marker-bounce');
-      setTimeout(() => el.classList.remove('marker-bounce'), 600);
+    const openAndHighlight = () => {
+      const el = entry.marker.getElement();
+      if (el) {
+        el.classList.add('marker-bounce');
+        setTimeout(() => el.classList.remove('marker-bounce'), 600);
+      }
+      entry.marker.openPopup();
+    };
+
+    if (this.markerClusterGroup && typeof this.markerClusterGroup.zoomToShowLayer === 'function') {
+      this.markerClusterGroup.zoomToShowLayer(entry.marker, () => {
+        openAndHighlight();
+      });
+    } else {
+      this.centerOn(pharmacy.lat, pharmacy.lng, 16);
+      openAndHighlight();
     }
-
-    /* Open popup */
-    entry.marker.openPopup();
-
-    /* Center map */
-    this.centerOn(pharmacy.lat, pharmacy.lng, 16);
   },
 
   /**
@@ -398,31 +434,46 @@ const PharmacyMap = {
    * @param {Function} filterFn - Returns true for markers to show
    */
   filterMarkers(filterFn) {
-    this.markers.forEach(entry => {
-      if (filterFn(entry.pharmacy)) {
-        if (!entry.visible) {
-          entry.marker.addTo(this.map);
-          entry.visible = true;
+    if (this.markerClusterGroup) {
+      const toAdd = [];
+      const toRemove = [];
+      this.markers.forEach(entry => {
+        if (filterFn(entry.pharmacy)) {
+          if (!entry.visible) {
+            toAdd.push(entry.marker);
+            entry.visible = true;
+          }
+        } else {
+          if (entry.visible) {
+            toRemove.push(entry.marker);
+            entry.visible = false;
+          }
         }
-      } else {
-        if (entry.visible) {
-          entry.marker.remove();
-          entry.visible = false;
+      });
+      if (toAdd.length > 0) this.markerClusterGroup.addLayers(toAdd);
+      if (toRemove.length > 0) this.markerClusterGroup.removeLayers(toRemove);
+    } else {
+      this.markers.forEach(entry => {
+        if (filterFn(entry.pharmacy)) {
+          if (!entry.visible) {
+            entry.marker.addTo(this.map);
+            entry.visible = true;
+          }
+        } else {
+          if (entry.visible) {
+            entry.marker.remove();
+            entry.visible = false;
+          }
         }
-      }
-    });
+      });
+    }
   },
 
   /**
    * Show all markers
    */
   showAllMarkers() {
-    this.markers.forEach(entry => {
-      if (!entry.visible) {
-        entry.marker.addTo(this.map);
-        entry.visible = true;
-      }
-    });
+    this.filterMarkers(() => true);
   },
 
   /**
@@ -453,7 +504,13 @@ const PharmacyMap = {
     let distanceHtml = '';
     if (this.userLat !== null) {
       const dist = Utils.haversineDistance(this.userLat, this.userLng, pharmacy.lat, pharmacy.lng);
-      distanceHtml = `<span class="popup-distance">📍 ${Utils.formatDistance(dist)}</span>`;
+      const travel = Utils.calculateTravelTime(dist);
+      distanceHtml = `
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span class="popup-distance">📍 ${Utils.formatDistance(dist)}</span>
+          <span class="pharmacy-travel-time" style="font-size:0.7rem;">${travel.formatted}</span>
+        </div>
+      `;
     }
 
     const approxWarning = Utils.hasApproximateLocation(pharmacy)
