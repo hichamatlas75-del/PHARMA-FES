@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pharma-fes-v1';
+const CACHE_NAME = 'pharma-fes-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -8,6 +8,8 @@ const ASSETS = [
   './js/map.js',
   './js/app.js',
   './manifest.json',
+  './images/icon-192.png',
+  './images/icon-512.png',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
   'https://fonts.googleapis.com/icon?family=Material+Icons+Round',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
@@ -16,14 +18,18 @@ const ASSETS = [
   'https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js'
 ];
 
-// Install Event
+// Install Event - Safe caching per asset
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
+    caches.open(CACHE_NAME).then(async cache => {
       console.log('[Service Worker] Caching static assets');
-      return cache.addAll(ASSETS).catch(err => {
-        console.warn('[Service Worker] Failed to cache some assets during install:', err);
-      });
+      for (const asset of ASSETS) {
+        try {
+          await cache.add(asset);
+        } catch (err) {
+          console.warn('[Service Worker] Skipping un-cacheable asset:', asset, err.message);
+        }
+      }
     })
   );
   self.skipWaiting();

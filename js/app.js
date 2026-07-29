@@ -13,6 +13,7 @@ const App = {
   statusInterval: null,
   lastGardeSignature: null,  // signature de la dernière liste de garde reçue (évite rebuild/toast inutiles)
   gardeFetchFailed: false,   // évite de spammer le toast d'erreur à chaque poll
+  deferredPrompt: null,      // Événement d'installation PWA capturé
 
   /* ========================================================
      INITIALIZATION
@@ -55,11 +56,17 @@ const App = {
 
     /* 9. Register Service Worker for PWA (if supported and not running locally via file://) */
     if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
-      window.addEventListener('load', () => {
+      const registerSW = () => {
         navigator.serviceWorker.register('./sw.js')
           .then(reg => console.log('Service Worker registered successfully:', reg.scope))
           .catch(err => console.warn('Service Worker registration failed:', err));
-      });
+      };
+
+      if (document.readyState === 'complete') {
+        registerSW();
+      } else {
+        window.addEventListener('load', registerSW);
+      }
     }
   },
 
@@ -85,6 +92,41 @@ const App = {
      ======================================================== */
 
   setupEventListeners() {
+    /* --- PWA Install handling --- */
+    const installBtn = document.getElementById('installBtn');
+
+    window.addEventListener('beforeinstallprompt', e => {
+      /* Empêcher l'affichage automatique de l'invite Chrome */
+      e.preventDefault();
+      /* Capturer l'événement pour un déclenchement manuel via le bouton */
+      this.deferredPrompt = e;
+      /* Afficher la petite icône d'installation dans le header */
+      if (installBtn) {
+        installBtn.classList.remove('hidden');
+      }
+    });
+
+    if (installBtn) {
+      installBtn.addEventListener('click', async () => {
+        if (!this.deferredPrompt) return;
+        /* Afficher la boîte de dialogue d'installation */
+        this.deferredPrompt.prompt();
+        const { outcome } = await this.deferredPrompt.userChoice;
+        console.log(`PWA install choice: ${outcome}`);
+        /* Réinitialiser l'événement et masquer le bouton */
+        this.deferredPrompt = null;
+        installBtn.classList.add('hidden');
+      });
+    }
+
+    window.addEventListener('appinstalled', () => {
+      this.deferredPrompt = null;
+      if (installBtn) {
+        installBtn.classList.add('hidden');
+      }
+      this.showToast('Application installée avec succès !', 'success');
+    });
+
     /* --- Search --- */
     const searchInput = document.getElementById('searchInput');
     const searchClear = document.getElementById('searchClear');
@@ -318,7 +360,7 @@ const App = {
       html += `
         <div class="search-result-item" data-id="${pharmacy.id}">
           <div class="search-result-icon">
-            <span class="material-icons-round">local_pharmacy</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
           </div>
           <div class="search-result-text">
             <div class="search-result-name">${Utils.escapeHtml(pharmacy.name)}</div>
@@ -611,7 +653,7 @@ const App = {
     if (pharmacies.length === 0) {
       content.innerHTML = `
         <div class="no-results">
-          <span class="material-icons-round">local_pharmacy</span>
+          <svg viewBox="0 0 24 24" width="36" height="36" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
           <p>Aucune pharmacie trouvée</p>
         </div>
       `;
@@ -649,7 +691,7 @@ const App = {
       if (gardePharmacies.length > 0) {
         html += `
           <div class="list-group-header other-header">
-            <span class="material-icons-round">local_pharmacy</span>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             <span>Autres pharmacies (${otherPharmacies.length})</span>
           </div>
         `;

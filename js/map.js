@@ -111,7 +111,7 @@ const PharmacyMap = {
         display:flex;align-items:center;justify-content:center;
         box-shadow:0 2px 8px rgba(0,0,0,0.2);
         transition:transform 0.3s ease;
-      "><span style="color:white;font-size:16px;" class="material-icons-round">local_pharmacy</span></div>`,
+      "><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:white;" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>`,
       iconSize: [32, 32],
       iconAnchor: [16, 16],
       popupAnchor: [0, -20]
