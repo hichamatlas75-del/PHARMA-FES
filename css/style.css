@@ -1067,6 +1067,17 @@ body.map-view-active .bottom-sheet {
   transform: scale(0.97);
 }
 
+.detail-action-btn.nav-gps-btn {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+}
+
+.detail-action-btn.nav-gps-btn:hover {
+  background: linear-gradient(135deg, #15803d, #166534);
+  box-shadow: 0 6px 16px rgba(22, 163, 74, 0.35);
+}
+
 .detail-action-btn.secondary {
   background: var(--primary-bg);
   color: var(--primary);

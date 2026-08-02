@@ -237,23 +237,9 @@ const App = {
       if (this.currentPharmacy) Utils.callPhone(this.currentPharmacy.phone);
     });
     document.getElementById('detailNavBtn').addEventListener('click', () => {
-      if (this.currentPharmacy) Utils.openDirections(this.currentPharmacy.lat, this.currentPharmacy.lng);
-    });
-    document.getElementById('detailDirectionsBtn').addEventListener('click', async () => {
       if (this.currentPharmacy) {
-        try {
-          this.showToast("Calcul de l'itinéraire...", "info");
-          await PharmacyMap.drawRoute(this.currentPharmacy.lat, this.currentPharmacy.lng);
-          document.getElementById('detailModal').classList.remove('active');
-          document.body.style.overflow = '';
-          this.showToast("Itinéraire tracé sur la carte", "success");
-        } catch (err) {
-          this.showToast(err.message, "error");
-        }
+        Utils.openDirections(this.currentPharmacy.lat, this.currentPharmacy.lng);
       }
-    });
-    document.getElementById('detailMapsBtn').addEventListener('click', () => {
-      if (this.currentPharmacy) Utils.openInMaps(this.currentPharmacy.lat, this.currentPharmacy.lng, this.currentPharmacy.name);
     });
     document.getElementById('detailWhatsappBtn').addEventListener('click', () => {
       if (this.currentPharmacy) Utils.shareWhatsApp(this.currentPharmacy);
