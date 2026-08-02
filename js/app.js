@@ -63,7 +63,11 @@ const App = {
     if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
       const registerSW = () => {
         navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker registered successfully:', reg.scope))
+          .then(reg => {
+            console.log('Service Worker registered successfully:', reg.scope);
+            /* Forcer la vérification de mise à jour au démarrage */
+            reg.update();
+          })
           .catch(err => console.warn('Service Worker registration failed:', err));
       };
 

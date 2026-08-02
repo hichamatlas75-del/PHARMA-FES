@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pharma-fes-v3';
+const CACHE_NAME = 'pharma-fes-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -21,11 +21,11 @@ const ASSETS = [
   'https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js'
 ];
 
-// Install Event - Safe caching per asset
+// Install Event - Force skip waiting & cache assets
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async cache => {
-      console.log('[Service Worker] Caching static assets');
+      console.log('[Service Worker] Caching static assets for v4');
       for (const asset of ASSETS) {
         try {
           await cache.add(asset);
@@ -38,14 +38,14 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// Activate Event
+// Activate Event - Purge old cache versions
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => {
       return Promise.all(
         keys.map(key => {
           if (key !== CACHE_NAME && key !== 'pharma-fes-tiles') {
-            console.log('[Service Worker] Removing old cache', key);
+            console.log('[Service Worker] Purging old cache:', key);
             return caches.delete(key);
           }
         })
@@ -55,7 +55,7 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch Event
+// Fetch Event - Smart network-first strategy for app files
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
@@ -64,7 +64,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Handle tile caching (Stale-While-Revalidate or Cache-First for tiles)
+  // Handle OpenStreetMap tiles (Stale-While-Revalidate)
   if (url.hostname.includes('tile.openstreetmap.org') || url.hostname.includes('openstreetmap.org')) {
     event.respondWith(
       caches.open('pharma-fes-tiles').then(cache => {
@@ -83,11 +83,43 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Cache-first for other static assets
+  // Network-First for local app core files (HTML, CSS, JS, Manifest)
+  const isLocalAsset = url.origin === location.origin || 
+                       url.pathname.endsWith('.html') || 
+                       url.pathname.endsWith('.js') || 
+                       url.pathname.endsWith('.css') ||
+                       url.pathname.endsWith('.json') ||
+                       url.pathname === '/' ||
+                       url.pathname.endsWith('/');
+
+  if (isLocalAsset) {
+    event.respondWith(
+      fetch(event.request)
+        .then(networkResponse => {
+          if (networkResponse && networkResponse.ok) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // If offline, serve from cache
+          return caches.match(event.request).then(cached => {
+            if (cached) return cached;
+            if (event.request.mode === 'navigate') {
+              return caches.match('./index.html');
+            }
+            return null;
+          });
+        })
+    );
+    return;
+  }
+
+  // Cache-First for external CDN static libraries
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {
       return cachedResponse || fetch(event.request).then(networkResponse => {
-        // Cache dynamic static assets on the fly
         if (networkResponse.ok && event.request.method === 'GET' && !url.protocol.startsWith('chrome-extension')) {
           return caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, networkResponse.clone());
@@ -97,7 +129,6 @@ self.addEventListener('fetch', event => {
         return networkResponse;
       });
     }).catch(() => {
-      // Fallback for offline static assets if not in cache
       if (event.request.mode === 'navigate') {
         return caches.match('./index.html');
       }
