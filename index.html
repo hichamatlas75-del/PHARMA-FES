@@ -68,6 +68,28 @@
         <span class="material-icons-round">close</span>
       </button>
     </div>
+
+    <!-- Advanced Filters Bar -->
+    <div class="filters-bar" id="filtersBar">
+      <div class="filter-chip-wrapper" id="quartierChipWrapper">
+        <span class="material-icons-round chip-icon">apartment</span>
+        <label for="quartierSelect" class="sr-only">Filtrer par quartier</label>
+        <select id="quartierSelect" class="filter-select" aria-label="Filtrer par quartier">
+          <option value="">Tous les quartiers</option>
+        </select>
+        <span class="material-icons-round select-arrow">expand_more</span>
+      </div>
+
+      <button class="filter-chip" id="btnOpenNow" aria-pressed="false" title="Afficher uniquement les pharmacies ouvertes">
+        <span class="material-icons-round">schedule</span>
+        <span>Ouvertes</span>
+      </button>
+
+      <button class="filter-chip filter-reset hidden" id="btnResetFilters" aria-label="Réinitialiser les filtres" title="Réinitialiser les filtres">
+        <span class="material-icons-round">restart_alt</span>
+      </button>
+    </div>
+
     <div class="search-results hidden" id="searchResults"></div>
   </section>
 

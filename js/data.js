@@ -6205,6 +6205,20 @@ const PharmacyData = {
   },
 
   /**
+   * Get sorted unique list of all available quartiers in Fès
+   * @returns {Array<string>} List of quartier names
+   */
+  getQuartiers() {
+    const quartierSet = new Set();
+    this.pharmacies.forEach(p => {
+      if (p.quartier && p.quartier.trim()) {
+        quartierSet.add(p.quartier.trim());
+      }
+    });
+    return Array.from(quartierSet).sort((a, b) => a.localeCompare(b, 'fr'));
+  },
+
+  /**
    * Get all pharmacies
    * @returns {Array} Complete pharmacy list
    */

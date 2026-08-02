@@ -4,6 +4,8 @@
 
 const App = {
   currentFilter: 'all',       // 'all' | 'nearby' | 'garde'
+  selectedQuartier: '',       // '' | quartier name
+  onlyOpenNow: false,         // true | false
   currentPharmacy: null,       // Currently viewed pharmacy
   bottomSheetState: 'peek',    // 'peek' | 'half' | 'full'
   touchStartY: 0,
@@ -30,19 +32,22 @@ const App = {
     const pharmacies = PharmacyData.getAll();
     PharmacyMap.addMarkers(pharmacies);
 
-    /* 3. Request user location (non-blocking) */
+    /* 3. Populate quartier dropdown */
+    this.populateQuartierDropdown();
+
+    /* 4. Request user location (non-blocking) */
     this.requestUserLocation();
 
-    /* 4. Setup event listeners */
+    /* 5. Setup event listeners */
     this.setupEventListeners();
 
-    /* 5. Update tab counts */
+    /* 6. Update tab counts */
     this.updateTabCounts();
 
-    /* 6. Populate bottom sheet with pharmacy list */
+    /* 7. Populate bottom sheet with pharmacy list */
     this.populatePharmacyList(pharmacies);
 
-    /* 6. Fetch real-time on-duty pharmacies (non-blocking) */
+    /* 8. Fetch real-time on-duty pharmacies (non-blocking) */
     this.fetchRealDeGarde();
 
     /* 7. Start periodic status updates */
@@ -161,6 +166,30 @@ const App = {
     document.getElementById('tabNearby').addEventListener('click', () => {
       if (this.currentFilter !== 'nearby') this.handleNearby();
     });
+
+    /* --- Advanced Filter Bar (Quartier & Status) --- */
+    const quartierSelect = document.getElementById('quartierSelect');
+    if (quartierSelect) {
+      quartierSelect.addEventListener('change', e => {
+        this.selectedQuartier = e.target.value;
+        this.applyFilter(this.currentFilter);
+      });
+    }
+
+    const btnOpenNow = document.getElementById('btnOpenNow');
+    if (btnOpenNow) {
+      btnOpenNow.addEventListener('click', () => {
+        this.onlyOpenNow = !this.onlyOpenNow;
+        btnOpenNow.setAttribute('aria-pressed', this.onlyOpenNow ? 'true' : 'false');
+        btnOpenNow.classList.toggle('active', this.onlyOpenNow);
+        this.applyFilter(this.currentFilter);
+      });
+    }
+
+    const btnResetFilters = document.getElementById('btnResetFilters');
+    if (btnResetFilters) {
+      btnResetFilters.addEventListener('click', () => this.resetFilters());
+    }
 
     /* --- FAB Buttons --- */
     document.getElementById('fabMaps').addEventListener('click', () => this.handleOpenMaps());
@@ -446,7 +475,46 @@ const App = {
      ======================================================== */
 
   /**
-   * Apply a filter to pharmacies
+   * Populate Quartiers dropdown selector dynamically from database
+   */
+  populateQuartierDropdown() {
+    const select = document.getElementById('quartierSelect');
+    if (!select) return;
+    const quartiers = PharmacyData.getQuartiers();
+    let html = '<option value="">Tous les quartiers</option>';
+    quartiers.forEach(q => {
+      html += `<option value="${Utils.escapeHtml(q)}">${Utils.escapeHtml(q)}</option>`;
+    });
+    select.innerHTML = html;
+  },
+
+  /**
+   * Reset active quartier and status filters
+   */
+  resetFilters() {
+    this.selectedQuartier = '';
+    this.onlyOpenNow = false;
+
+    const quartierSelect = document.getElementById('quartierSelect');
+    if (quartierSelect) quartierSelect.value = '';
+
+    const btnOpenNow = document.getElementById('btnOpenNow');
+    if (btnOpenNow) {
+      btnOpenNow.classList.remove('active');
+      btnOpenNow.setAttribute('aria-pressed', 'false');
+    }
+
+    const quartierWrapper = document.getElementById('quartierChipWrapper');
+    if (quartierWrapper) quartierWrapper.classList.remove('active');
+
+    const btnReset = document.getElementById('btnResetFilters');
+    if (btnReset) btnReset.classList.add('hidden');
+
+    this.applyFilter(this.currentFilter);
+  },
+
+  /**
+   * Apply a filter to pharmacies (Tab + Quartier + OpenNow)
    * @param {string} filter - 'all' | 'nearby' | 'garde'
    */
   applyFilter(filter) {
@@ -470,10 +538,8 @@ const App = {
           this.applyFilter('all');
           return;
         }
-        pharmacies = PharmacyData.getNearby(PharmacyMap.userLat, PharmacyMap.userLng, 10);
+        pharmacies = PharmacyData.getNearby(PharmacyMap.userLat, PharmacyMap.userLng, 50);
         title = 'Proches de vous';
-        PharmacyMap.filterMarkers(p => pharmacies.some(np => np.id === p.id));
-        PharmacyMap.fitToMarkers();
         break;
 
       case 'garde': {
@@ -495,9 +561,6 @@ const App = {
           pharmacies.sort((a, b) => a.distance - b.distance);
         }
         title = 'De garde actuellement';
-        const gardeIds = new Set(activeGarde.map(p => p.id));
-        PharmacyMap.filterMarkers(p => gardeIds.has(p.id));
-        PharmacyMap.fitToMarkers();
         break;
       }
 
@@ -511,8 +574,41 @@ const App = {
           pharmacies.sort((a, b) => a.distance - b.distance);
         }
         title = 'Pharmacies';
-        PharmacyMap.showAllMarkers();
         break;
+    }
+
+    /* Apply Quartier filter if selected */
+    if (this.selectedQuartier && this.selectedQuartier.trim() !== '') {
+      pharmacies = pharmacies.filter(p => p.quartier === this.selectedQuartier);
+    }
+
+    /* Apply "Ouvertes maintenant" filter if active */
+    if (this.onlyOpenNow) {
+      pharmacies = pharmacies.filter(p => {
+        const status = Utils.getStatus(p);
+        return status === 'open' || status === 'garde-jour' || status === 'garde-nuit' || p.isH24;
+      });
+    }
+
+    /* Update reset button & filter styles */
+    const isFiltered = (this.selectedQuartier && this.selectedQuartier !== '') || this.onlyOpenNow;
+    const btnReset = document.getElementById('btnResetFilters');
+    if (btnReset) {
+      btnReset.classList.toggle('hidden', !isFiltered);
+    }
+    const quartierWrapper = document.getElementById('quartierChipWrapper');
+    if (quartierWrapper) {
+      quartierWrapper.classList.toggle('active', !!(this.selectedQuartier && this.selectedQuartier !== ''));
+    }
+
+    /* Filter markers on map */
+    const filteredIds = new Set(pharmacies.map(p => p.id));
+    PharmacyMap.filterMarkers(p => filteredIds.has(p.id));
+
+    if (isFiltered || filter === 'nearby' || filter === 'garde') {
+      PharmacyMap.fitToMarkers();
+    } else {
+      PharmacyMap.showAllMarkers();
     }
 
     this.populatePharmacyList(pharmacies, title);
@@ -710,16 +806,24 @@ const App = {
     });
 
     let html = '';
+    const hasUserPos = PharmacyMap.userLat !== null;
 
     if (gardePharmacies.length > 0) {
       html += `
-        <div class="list-group-header de-garde-header">
-          <span class="material-icons-round">shield</span>
-          <span>Pharmacies de garde (${gardePharmacies.length})</span>
+        <div class="list-group-header de-garde-header" style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="material-icons-round">shield</span>
+            <span>Pharmacies de garde (${gardePharmacies.length})</span>
+          </div>
+          ${hasUserPos 
+            ? `<span style="font-size:0.7rem;color:var(--accent);font-weight:600;">📍 Triées par proximité</span>`
+            : `<button class="btn-locate-sort" onclick="App.handleGarde()"><span class="material-icons-round" style="font-size:14px;">near_me</span> Trier par proximité</button>`
+          }
         </div>
       `;
       gardePharmacies.forEach((pharmacy, i) => {
-        html += this.createPharmacyCard(pharmacy, i);
+        const isClosest = hasUserPos && i === 0;
+        html += this.createPharmacyCard(pharmacy, i, isClosest);
       });
     }
 
@@ -733,7 +837,7 @@ const App = {
         `;
       }
       otherPharmacies.forEach((pharmacy, i) => {
-        html += this.createPharmacyCard(pharmacy, gardePharmacies.length + i);
+        html += this.createPharmacyCard(pharmacy, gardePharmacies.length + i, false);
       });
     }
 
@@ -744,9 +848,10 @@ const App = {
    * Create a single pharmacy card HTML
    * @param {Object} pharmacy - Pharmacy object
    * @param {number} index - Animation delay index
+   * @param {boolean} isClosest - Whether this is the closest pharmacy
    * @returns {string} HTML string
    */
-  createPharmacyCard(pharmacy, index) {
+  createPharmacyCard(pharmacy, index, isClosest = false) {
     const status = Utils.getStatus(pharmacy);
     const statusLabel = Utils.getStatusLabel(status);
     const statusClass = Utils.getStatusClass(status);
@@ -782,10 +887,14 @@ const App = {
 
     const delay = Math.min(index * 0.05, 0.5);
 
+    const closestBadgeHtml = isClosest
+      ? `<span class="badge-closest"><span class="material-icons-round" style="font-size:12px;margin-right:2px;">near_me</span>La plus proche</span>`
+      : '';
+
     return `
-      <div class="pharmacy-card" data-id="${pharmacy.id}" style="animation-delay:${delay}s;">
+      <div class="pharmacy-card ${isClosest ? 'closest-card' : ''}" data-id="${pharmacy.id}" style="animation-delay:${delay}s;">
         <div class="pharmacy-card-header">
-          <span class="pharmacy-card-name">${Utils.escapeHtml(pharmacy.name)}</span>
+          <span class="pharmacy-card-name">${Utils.escapeHtml(pharmacy.name)}${closestBadgeHtml}</span>
           <span class="pharmacy-status ${statusClass}">${statusLabel}</span>
         </div>
         <div class="pharmacy-card-address">
