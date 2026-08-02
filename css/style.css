@@ -1093,6 +1093,10 @@ body.map-view-active .bottom-sheet {
   transform: scale(0.97);
 }
 
+.detail-action-btn.share-btn {
+  grid-column: span 2;
+}
+
 /* ---------- About View ---------- */
 .about-view {
   position: fixed;

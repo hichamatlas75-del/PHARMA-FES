@@ -241,9 +241,6 @@ const App = {
         Utils.openDirections(this.currentPharmacy.lat, this.currentPharmacy.lng);
       }
     });
-    document.getElementById('detailWhatsappBtn').addEventListener('click', () => {
-      if (this.currentPharmacy) Utils.shareWhatsApp(this.currentPharmacy);
-    });
     document.getElementById('detailShareBtn').addEventListener('click', () => {
       if (this.currentPharmacy) Utils.sharePharmacy(this.currentPharmacy);
     });
@@ -322,8 +319,8 @@ const App = {
           case 'call':
             Utils.callPhone(pharmacy.phone);
             break;
-          case 'whatsapp':
-            Utils.shareWhatsApp(pharmacy);
+          case 'share':
+            Utils.sharePharmacy(pharmacy);
             break;
           case 'directions':
             this.showToast("Calcul de l'itinéraire...", "info");
@@ -867,8 +864,8 @@ const App = {
          </button>`
       : '';
 
-    const whatsappAction = `<button class="pharmacy-card-action whatsapp" data-id="${pharmacy.id}" data-action="whatsapp" aria-label="Partager sur WhatsApp" title="Partager sur WhatsApp">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.84 9.84 0 0 0 12.04 2zm5.8 14.16c-.24.68-1.2 1.24-1.95 1.3-.51.04-1.18.06-3.41-.85-2.85-1.17-4.69-4.08-4.83-4.27-.14-.19-1.16-1.54-1.16-2.94 0-1.4.73-2.09 1-2.37.27-.28.59-.35.79-.35.2 0 .4 0 .57.01.18.01.43-.07.67.51.24.58.83 2.03.9 2.18.07.15.12.33.02.53-.1.19-.15.31-.3.49-.15.17-.31.39-.45.52-.15.14-.3.3-.13.6.17.3.76 1.25 1.64 2.03 1.12.99 2.07 1.3 2.37 1.45.3.15.48.13.65-.07.18-.2.76-.88.96-1.18.2-.3.4-.25.68-.15.28.1.1.77.52 3.86 1.95.09.28.09.53 0 .78-.24.68z"/></svg>
+    const shareAction = `<button class="pharmacy-card-action" data-id="${pharmacy.id}" data-action="share" aria-label="Partager" title="Partager">
+      <span class="material-icons-round">share</span>
     </button>`;
 
     const delay = Math.min(index * 0.05, 0.5);
@@ -892,7 +889,7 @@ const App = {
           ${distanceHtml}
           <div class="pharmacy-card-actions">
             ${phoneAction}
-            ${whatsappAction}
+            ${shareAction}
             <button class="pharmacy-card-action" data-id="${pharmacy.id}" data-action="directions" aria-label="Itinéraire" title="Itinéraire">
               <span class="material-icons-round">directions</span>
             </button>
